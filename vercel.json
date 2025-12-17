@@ -2,17 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/predict.py",
-      "use": "@vercel/python@3.8",
-      "config": { "maxLambdaSize": "15mb" }
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
+      "src": "wsgi.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "api/predict.py" },
-    { "src": "/(.*)", "dest": "index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "wsgi.py"
+    }
   ]
 }
