@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Chess Go Go - Live Predictor</title>
+    <style>
+        :root {
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-red-400: rgba(255, 84, 89, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+            --color-brown-600-rgb: 94, 82, 64;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-cream-50);
+            color: var(--color-slate-900);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--color-teal-500);
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(var(--color-brown-600-rgb), 0.2);
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--color-slate-500);
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--color-teal-500);
+            border-bottom-color: var(--color-teal-500);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--color-cream-100);
+            border: 1px solid rgba(var(--color-brown-600-rgb), 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--color-slate-900);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(var(--color-brown-600-rgb), 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--color-slate-900);
+            background: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--color-teal-500);
+            box-shadow: 0 0 0 3px rgba(33, 128, 141, 0.1);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--color-teal-500);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-teal-600);
+        }
+
+        .btn-primary:active {
+            background: var(--color-teal-700);
+        }
+
+        .btn-secondary {
+            background: rgba(var(--color-brown-600-rgb), 0.12);
+            color: var(--color-slate-900);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(var(--color-brown-600-rgb), 0.2);
+        }
+
+        .btn-success {
+            background: var(--color-teal-500);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--color-teal-600);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(33, 128, 141, 0.08), rgba(50, 184, 198, 0.08));
+            border: 2px solid var(--color-teal-500);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-box h3 {
+            color: var(--color-teal-500);
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-box .prediction {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--color-teal-700);
+            margin: 10px 0;
+        }
+
+        .result-box .confidence {
+            font-size: 14px;
+            color: var(--color-slate-500);
+            margin: 10px 0 0 0;
+        }
+
+        .top-3 {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(33, 128, 141, 0.2);
+        }
+
+        .top-3 h4 {
+            margin: 0 0 12px 0;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--color-slate-500);
+            letter-spacing: 0.5px;
+        }
+
+        .top-3-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .top-3-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid var(--color-teal-500);
+        }
+
+        .top-3-item span {
+            font-weight: 500;
+        }
+
+        .top-3-item .prob {
+            color: var(--color-teal-500);
+            font-weight: 600;
+        }
+
+        .game-log {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid rgba(var(--color-brown-600-rgb), 0.2);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid rgba(var(--color-brown-600-rgb), 0.1);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry .match {
+            color: var(--color-slate-900);
+            font-weight: 500;
+        }
+
+        .log-entry .accuracy {
+            background: rgba(33, 128, 141, 0.15);
+            color: var(--color-teal-700);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .log-entry.correct .accuracy {
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+
+        .log-entry.incorrect .accuracy {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid rgba(var(--color-brown-600-rgb), 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--color-slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-teal-500);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(33, 128, 141, 0.2);
+            border-top-color: var(--color-teal-500);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(192, 21, 47, 0.08);
+            color: var(--color-red-500);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-left: 4px solid var(--color-red-500);
+        }
+
+        .success-msg {
+            background: rgba(34, 197, 94, 0.08);
+            color: #16a34a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-left: 4px solid #16a34a;
+        }
+
+        @media (max-width: 600px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .result-box .prediction {
+                font-size: 24px;
+            }
+
+            .stats-box {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Magic Chess Go Go - Live Predictor</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('predict')">Predict Next</button>
+            <button class="tab-btn" onclick="switchTab('log')">Log Result</button>
+            <button class="tab-btn" onclick="switchTab('stats')">Game Stats</button>
+        </div>
+
+        <!-- Predict Tab -->
+        <div id="predict" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-top: 0; color: var(--color-teal-500);">Predict Your Next Opponent</h2>
+                
+                <div class="form-group">
+                    <label for="playerSelect">Your Player</label>
+                    <select id="playerSelect">
+                        <option value="">Select your player...</option>
+                        <option value="Player 1">Player 1</option>
+                        <option value="Player 2">Player 2</option>
+                        <option value="Player 3">Player 3</option>
+                        <option value="Player 4">Player 4</option>
+                        <option value="Player 5">Player 5</option>
+                        <option value="Player 6">Player 6</option>
+                        <option value="Player 7">Player 7</option>
+                        <option value="Player 8">Player 8</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="roundSelect">Last PvP Round You Played</label>
+                    <select id="roundSelect">
+                        <option value="">Select round...</option>
+                        <option value="I-1">I-1</option>
+                        <option value="I-2">I-2</option>
+                        <option value="I-3">I-3</option>
+                        <option value="I-4">I-4</option>
+                        <option value="II-1">II-1</option>
+                        <option value="II-2">II-2</option>
+                        <option value="II-3">II-3</option>
+                        <option value="II-4">II-4</option>
+                        <option value="II-5">II-5</option>
+                        <option value="II-6">II-6</option>
+                        <option value="III-1">III-1</option>
+                        <option value="III-2">III-2</option>
+                        <option value="III-3">III-3</option>
+                        <option value="III-4">III-4</option>
+                        <option value="III-5">III-5</option>
+                        <option value="IV-1">IV-1</option>
+                        <option value="IV-2">IV-2</option>
+                        <option value="IV-3">IV-3</option>
+                        <option value="IV-4">IV-4</option>
+                        <option value="V-1">V-1</option>
+                        <option value="V-2">V-2</option>
+                        <option value="V-3">V-3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="opponentSelect">Opponent You Faced in That Round</label>
+                    <select id="opponentSelect">
+                        <option value="">Select opponent...</option>
+                        <option value="Player 1">Player 1</option>
+                        <option value="Player 2">Player 2</option>
+                        <option value="Player 3">Player 3</option>
+                        <option value="Player 4">Player 4</option>
+                        <option value="Player 5">Player 5</option>
+                        <option value="Player 6">Player 6</option>
+                        <option value="Player 7">Player 7</option>
+                        <option value="Player 8">Player 8</option>
+                    </select>
+                </div>
+
+                <button class="btn-primary" onclick="predictNext()">Predict Next Opponent</button>
+                <div id="predictError" class="error" style="display:none;"></div>
+
+                <div id="predictionResult" style="display:none;">
+                    <div class="result-box">
+                        <h3>Predicted Next Opponent</h3>
+                        <div class="prediction" id="predictionText">-</div>
+                        <div class="confidence" id="confidenceText">-</div>
+                        <div class="top-3">
+                            <h4>Top 3 Predictions</h4>
+                            <div class="top-3-list" id="top3List"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Result Tab -->
+        <div id="log" class="tab-content">
+            <div class="card">
+                <h2 style="margin-top: 0; color: var(--color-teal-500);">Log Actual Match Result</h2>
+                <p style="color: var(--color-slate-500); margin: 0 0 20px 0;">
+                    After a match, log the actual opponent here. The model will learn and improve predictions.
+                </p>
+
+                <div class="form-group">
+                    <label for="logPlayerSelect">Your Player</label>
+                    <select id="logPlayerSelect">
+                        <option value="">Select your player...</option>
+                        <option value="Player 1">Player 1</option>
+                        <option value="Player 2">Player 2</option>
+                        <option value="Player 3">Player 3</option>
+                        <option value="Player 4">Player 4</option>
+                        <option value="Player 5">Player 5</option>
+                        <option value="Player 6">Player 6</option>
+                        <option value="Player 7">Player 7</option>
+                        <option value="Player 8">Player 8</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="logRoundSelect">Round Just Completed</label>
+                    <select id="logRoundSelect">
+                        <option value="">Select round...</option>
+                        <option value="I-1">I-1</option>
+                        <option value="I-2">I-2</option>
+                        <option value="I-3">I-3</option>
+                        <option value="I-4">I-4</option>
+                        <option value="II-1">II-1</option>
+                        <option value="II-2">II-2</option>
+                        <option value="II-3">II-3</option>
+                        <option value="II-4">II-4</option>
+                        <option value="II-5">II-5</option>
+                        <option value="II-6">II-6</option>
+                        <option value="III-1">III-1</option>
+                        <option value="III-2">III-2</option>
+                        <option value="III-3">III-3</option>
+                        <option value="III-4">III-4</option>
+                        <option value="III-5">III-5</option>
+                        <option value="IV-1">IV-1</option>
+                        <option value="IV-2">IV-2</option>
+                        <option value="IV-3">IV-3</option>
+                        <option value="IV-4">IV-4</option>
+                        <option value="V-1">V-1</option>
+                        <option value="V-2">V-2</option>
+                        <option value="V-3">V-3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="logOpponentSelect">Actual Opponent You Faced</label>
+                    <select id="logOpponentSelect">
+                        <option value="">Select opponent...</option>
+                        <option value="Player 1">Player 1</option>
+                        <option value="Player 2">Player 2</option>
+                        <option value="Player 3">Player 3</option>
+                        <option value="Player 4">Player 4</option>
+                        <option value="Player 5">Player 5</option>
+                        <option value="Player 6">Player 6</option>
+                        <option value="Player 7">Player 7</option>
+                        <option value="Player 8">Player 8</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="logPrevOpponentSelect">Previous Round Opponent (for training context)</label>
+                    <select id="logPrevOpponentSelect">
+                        <option value="">Select previous opponent...</option>
+                        <option value="Player 1">Player 1</option>
+                        <option value="Player 2">Player 2</option>
+                        <option value="Player 3">Player 3</option>
+                        <option value="Player 4">Player 4</option>
+                        <option value="Player 5">Player 5</option>
+                        <option value="Player 6">Player 6</option>
+                        <option value="Player 7">Player 7</option>
+                        <option value="Player 8">Player 8</option>
+                    </select>
+                </div>
+
+                <button class="btn-success" onclick="logResult()">Log Result & Retrain Model</button>
+                <div id="logError" class="error" style="display:none;"></div>
+                <div id="logSuccess" class="success-msg" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="stats" class="tab-content">
+            <div class="card">
+                <h2 style="margin-top: 0; color: var(--color-teal-500);">Game Statistics</h2>
+                
+                <div class="stats-box">
+                    <div class="stat-card">
+                        <div class="label">Total Matches Logged</div>
+                        <div class="value" id="totalMatches">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Correct Predictions</div>
+                        <div class="value" id="correctPredictions">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Accuracy</div>
+                        <div class="value" id="modelAccuracy">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Model Status</div>
+                        <div class="value" id="modelStatus" style="font-size: 14px;">Ready</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; color: var(--color-teal-500);">Recent Matches</h3>
+                <div class="game-log" id="gameLog">
+                    <div style="text-align: center; color: var(--color-slate-500); padding: 20px;">
+                        No matches logged yet. Start playing and log results!
+                    </div>
+                </div>
+
+                <button class="btn-secondary" onclick="clearAllData()" style="margin-top: 20px;">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let sessionData = {
+            matches: [],
+            predictions: []
+        };
+
+        // Initialize
+        loadSessionData();
+        updateStats();
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'stats') {
+                updateStats();
+            }
+        }
+
+        async function predictNext() {
+            const player = document.getElementById('playerSelect').value;
+            const round = document.getElementById('roundSelect').value;
+            const opponent = document.getElementById('opponentSelect').value;
+            const errorDiv = document.getElementById('predictError');
+            const resultDiv = document.getElementById('predictionResult');
+
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+
+            if (!player || !round || !opponent) {
+                errorDiv.textContent = 'Please select all fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player, round, last_opponent: opponent })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('predictionText').textContent = data.predicted;
+                document.getElementById('confidenceText').textContent = `Confidence: ${data.confidence.toFixed(1)}%`;
+
+                const top3Html = data.top3.map(([opp, prob], idx) => `
+                    <div class="top-3-item">
+                        <span>${idx + 1}. ${opp}</span>
+                        <span class="prob">${prob.toFixed(1)}%</span>
+                    </div>
+                `).join('');
+                document.getElementById('top3List').innerHTML = top3Html;
+
+                resultDiv.style.display = 'block';
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function logResult() {
+            const player = document.getElementById('logPlayerSelect').value;
+            const round = document.getElementById('logRoundSelect').value;
+            const opponent = document.getElementById('logOpponentSelect').value;
+            const prevOpponent = document.getElementById('logPrevOpponentSelect').value;
+            const errorDiv = document.getElementById('logError');
+            const successDiv = document.getElementById('logSuccess');
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            if (!player || !round || !opponent || !prevOpponent) {
+                errorDiv.textContent = 'Please select all fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/log-result`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        player,
+                        round,
+                        actual_opponent: opponent,
+                        previous_opponent: prevOpponent
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                successDiv.textContent = 'Result logged! Model retrained successfully. ' + (data.message || '');
+                successDiv.style.display = 'block';
+
+                // Store locally
+                sessionData.matches.push({
+                    player, round, opponent, prevOpponent,
+                    timestamp: new Date().toLocaleString()
+                });
+                saveSessionData();
+                updateStats();
+
+                // Reset form
+                document.getElementById('logPlayerSelect').value = '';
+                document.getElementById('logRoundSelect').value = '';
+                document.getElementById('logOpponentSelect').value = '';
+                document.getElementById('logPrevOpponentSelect').value = '';
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function updateStats() {
+            const matches = sessionData.matches || [];
+            document.getElementById('totalMatches').textContent = matches.length;
+            
+            let correct = 0;
+            matches.forEach(m => {
+                if (m.wasCorrect) correct++;
+            });
+            document.getElementById('correctPredictions').textContent = correct;
+            
+            const accuracy = matches.length > 0 ? ((correct / matches.length) * 100).toFixed(1) : '-';
+            document.getElementById('modelAccuracy').textContent = accuracy + (accuracy !== '-' ? '%' : '');
+
+            // Game log
+            const logHtml = matches.length > 0 
+                ? matches.slice().reverse().map(m => `
+                    <div class="log-entry ${m.wasCorrect ? 'correct' : 'incorrect'}">
+                        <div class="match">${m.player} vs ${m.opponent} (${m.round})</div>
+                        <div class="accuracy">${m.wasCorrect ? '✓ Correct' : '✗ Miss'}</div>
+                    </div>
+                `).join('')
+                : '<div style="text-align: center; color: var(--color-slate-500); padding: 20px;">No matches logged yet</div>';
+            
+            document.getElementById('gameLog').innerHTML = logHtml;
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure? This will clear all logged matches.')) {
+                sessionData = { matches: [], predictions: [] };
+                saveSessionData();
+                updateStats();
+            }
+        }
+
+        function saveSessionData() {
+            localStorage.setItem('mcggSessionData', JSON.stringify(sessionData));
+        }
+
+        function loadSessionData() {
+            const stored = localStorage.getItem('mcggSessionData');
+            if (stored) {
+                sessionData = JSON.parse(stored);
+            }
+        }
+    </script>
+</body>
+</html>
