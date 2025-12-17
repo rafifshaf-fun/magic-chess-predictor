@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
-import json
+from flask import Flask, request, jsonify, send_from_directory
+import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='/')
 
 # Complete training data from all 4 cleaned matches (376 samples)
 training_data = [
@@ -279,7 +279,6 @@ session_matches = []
 def initialize_model():
     global model, le_player, le_round, le_last_opp, le_next_opp
     
-    # Get all unique values
     players = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8"]
     rounds = ["I-1", "I-2", "I-3", "I-4", "II-1", "II-2", "II-3", "II-4", "II-5", "II-6", 
               "III-1", "III-2", "III-3", "III-4", "III-5", "III-6", "IV-1", "IV-2", "IV-3", "IV-4", "IV-5", "IV-6",
@@ -290,7 +289,6 @@ def initialize_model():
     le_last_opp.fit(players)
     le_next_opp.fit(players)
     
-    # Prepare training data
     X = []
     y = []
     
@@ -299,21 +297,19 @@ def initialize_model():
             le_player.transform([sample["player"]])[0],
             le_round.transform([sample["current_round"]])[0],
             le_last_opp.transform([sample["last_opponent"]])[0],
-            1  # unique_opponents_faced - simplified for now
+            1
         ])
         y.append(le_next_opp.transform([sample["next_opponent"]])[0])
     
     X = np.array(X)
     y = np.array(y)
     
-    # Train model
     model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
     model.fit(X, y)
 
 def retrain_model():
-    global model, le_player, le_round, le_last_opp, le_next_opp
+    global model
     
-    # Combine original data with session matches
     all_data = training_data.copy()
     
     for match in session_matches:
@@ -324,7 +320,6 @@ def retrain_model():
             "next_opponent": match["actual_opponent"]
         })
     
-    # Retrain
     X = []
     y = []
     
@@ -395,7 +390,6 @@ def log_result():
     if not all([player, round_name, actual_opponent, prev_opponent]):
         return jsonify({"error": "Missing required fields"}), 400
     
-    # Store match
     session_matches.append({
         "player": player,
         "round": round_name,
@@ -404,7 +398,6 @@ def log_result():
         "timestamp": str(np.datetime64('now'))
     })
     
-    # Retrain model
     retrain_model()
     
     return jsonify({
@@ -418,14 +411,18 @@ def stats():
     return jsonify({
         "total_matches_logged": len(session_matches),
         "total_training_samples": len(training_data) + len(session_matches),
-        "model_status": "ready",
-        "matches": session_matches
+        "model_status": "ready"
     })
 
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({"status": "ok", "model": "ready", "training_samples": len(training_data)})
 
+# Serve static files
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
+
 if __name__ == '__main__':
     initialize_model()
-    app.run(debug=True)
+    app.run(debug=False)
