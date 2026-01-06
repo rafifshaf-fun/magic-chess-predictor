@@ -15,7 +15,7 @@ def load_and_train_model():
     
     # Load all match CSV files
     for match_num in range(1, 10):
-        csv_file = f"Match-{match_num}.csv"
+        csv_file = f"Match {match_num}.csv"
         try:
             if not os.path.exists(csv_file):
                 continue
