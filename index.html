@@ -303,6 +303,87 @@
             color: #666;
         }
 
+        /* CUSTOM OPPONENT CARD */
+        .custom-card {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe699 100%);
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .custom-card:hover {
+            transform: translateX(5px);
+            border-color: #ff9800;
+            background: linear-gradient(135deg, #ffe699 0%, #ffd966 100%);
+        }
+
+        .custom-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .custom-card input[type="radio"]:checked + .card-content {
+            color: #ff6f00;
+            font-weight: 600;
+        }
+
+        .custom-card .radio-circle {
+            border-color: #ff9800;
+        }
+
+        .custom-card input[type="radio"]:checked + .card-content .radio-circle {
+            background: #ff9800;
+        }
+
+        .custom-card input[type="radio"]:checked + .card-content .radio-circle::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+        }
+
+        /* CUSTOM OPPONENT DROPDOWN */
+        .custom-dropdown-section {
+            display: none;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff9e6;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+        }
+
+        .custom-dropdown-section.active {
+            display: block;
+        }
+
+        .custom-dropdown-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ff6f00;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .custom-dropdown-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .custom-dropdown-select:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+
         /* CONFIRM BUTTON */
         .confirm-btn {
             width: 100%;
@@ -504,9 +585,45 @@
 
         <!-- PREDICTION RESULTS -->
         <div id="resultsSection" class="results-section">
-            <p class="prediction-title">Who will you face in the next round? Select the correct opponent:</p>
+            <p class="prediction-title">Who you faced against this round? Select the correct opponent:</p>
 
             <div class="prediction-options" id="predictionsContainer"></div>
+
+            <!-- CUSTOM OPPONENT CARD -->
+            <label class="custom-card">
+                <input type="radio" name="prediction" value="custom" onchange="toggleCustomDropdown()">
+                <div class="card-content">
+                    <div class="radio-circle"></div>
+                    <div class="prediction-label">
+                        <span class="prediction-name">⚠️ None of the above</span>
+                        <span class="prediction-confidence">Select opponent not in predictions</span>
+                    </div>
+                </div>
+            </label>
+
+            <!-- CUSTOM OPPONENT DROPDOWN -->
+            <div id="customDropdownSection" class="custom-dropdown-section">
+                <label class="custom-dropdown-label">Select opponent:</label>
+                <select id="customOpponentSelect" class="custom-dropdown-select">
+                    <option value="">-- Choose opponent --</option>
+                    <option value="Player 1">Player 1</option>
+                    <option value="Player 2">Player 2</option>
+                    <option value="Player 3">Player 3</option>
+                    <option value="Player 4">Player 4</option>
+                    <option value="Player 5">Player 5</option>
+                    <option value="Player 6">Player 6</option>
+                    <option value="Player 7">Player 7</option>
+                    <option value="Player 8">Player 8</option>
+                    <option value="M.Player 1">M.Player 1</option>
+                    <option value="M.Player 2">M.Player 2</option>
+                    <option value="M.Player 3">M.Player 3</option>
+                    <option value="M.Player 4">M.Player 4</option>
+                    <option value="M.Player 5">M.Player 5</option>
+                    <option value="M.Player 6">M.Player 6</option>
+                    <option value="M.Player 7">M.Player 7</option>
+                    <option value="M.Player 8">M.Player 8</option>
+                </select>
+            </div>
 
             <button class="confirm-btn" onclick="confirmAndAdvance()" id="confirmBtn">Confirm & Continue</button>
         </div>
@@ -646,7 +763,7 @@
 
                 const html = `
                     <label class="prediction-card">
-                        <input type="radio" name="prediction" value="${letter}" onchange="updateConfirmBtn()">
+                        <input type="radio" name="prediction" value="${letter}" onchange="hideCustomDropdown()">
                         <div class="card-content">
                             <div class="radio-circle"></div>
                             <div class="prediction-label">
@@ -660,21 +777,48 @@
             });
 
             document.getElementById('confirmBtn').disabled = true;
+            hideCustomDropdown();
         }
 
-        function updateConfirmBtn() {
+        function toggleCustomDropdown() {
+            const section = document.getElementById('customDropdownSection');
+            const selected = document.querySelector('input[name="prediction"]:checked')?.value === 'custom';
+            
+            if (selected) {
+                section.classList.add('active');
+                document.getElementById('confirmBtn').disabled = true;
+            } else {
+                section.classList.remove('active');
+                document.getElementById('customOpponentSelect').value = '';
+            }
+        }
+
+        function hideCustomDropdown() {
+            const section = document.getElementById('customDropdownSection');
+            section.classList.remove('active');
+            document.getElementById('customOpponentSelect').value = '';
             document.getElementById('confirmBtn').disabled = false;
         }
 
         function confirmAndAdvance() {
-            const selectedLetter = document.querySelector('input[name="prediction"]:checked')?.value;
-            if (!selectedLetter) {
+            const selectedValue = document.querySelector('input[name="prediction"]:checked')?.value;
+            if (!selectedValue) {
                 showMessage('Please select an opponent', 'error');
                 return;
             }
 
-            const idx = selectedLetter.charCodeAt(0) - 65;
-            const selectedOpponent = currentPredictions[idx][0];
+            let selectedOpponent;
+
+            if (selectedValue === 'custom') {
+                selectedOpponent = document.getElementById('customOpponentSelect').value;
+                if (!selectedOpponent) {
+                    showMessage('Please select a custom opponent from the dropdown', 'error');
+                    return;
+                }
+            } else {
+                const idx = selectedValue.charCodeAt(0) - 65;
+                selectedOpponent = currentPredictions[idx][0];
+            }
 
             // Log feedback
             fetch('/api/log-feedback', {
@@ -684,7 +828,7 @@
                     player: currentState.player,
                     round: currentState.round,
                     last_opponent: currentState.lastOpponent,
-                    selected_option: selectedLetter,
+                    selected_option: selectedValue,
                     prediction_options: currentPredictions
                 })
             })
