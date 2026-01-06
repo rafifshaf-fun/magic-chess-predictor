@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Chess - Opponent Predictor</title>
+    <title>Magic Chess Predictor</title>
     <style>
         * {
             margin: 0;
@@ -12,86 +12,59 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 700px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        h1 {
-            color: #667eea;
+        header {
             text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
             margin-bottom: 10px;
-            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
         }
 
-        /* DEATH TOGGLES */
-        .death-section {
-            background: #f9f9f9;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .death-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-        }
-
-        .death-grid {
+        .content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
-        .death-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+        .card {
             background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 13px;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .death-toggle:hover {
-            border-color: #667eea;
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
         }
 
-        .death-toggle.dead {
-            background: #ffebee;
-            border-color: #ef5350;
-            color: #c62828;
-            font-weight: 600;
-        }
-
-        .death-toggle input {
-            cursor: pointer;
-        }
-
-        .form-section {
-            margin-bottom: 30px;
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
         }
 
         .form-group {
@@ -103,15 +76,16 @@
             margin-bottom: 8px;
             color: #333;
             font-weight: 500;
+            font-size: 0.95em;
         }
 
         select, input {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
         }
 
         select:focus, input:focus {
@@ -120,841 +94,515 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
         button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-
-        .btn-predict {
+            width: 100%;
+            padding: 12px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-        }
-
-        .btn-predict:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-reset {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-reset:hover {
-            background: #e0e0e0;
-        }
-
-        .btn-edit {
-            background: #f0f0f0;
-            color: #333;
-            flex: 1;
-        }
-
-        .btn-edit:hover {
-            background: #e0e0e0;
-        }
-
-        /* CONTINUOUS MODE DISPLAY */
-        .continuous-section {
-            display: none;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f5f7fa;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .continuous-section.active {
-            display: block;
-        }
-
-        .round-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .info-box {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .info-label {
-            font-size: 11px;
-            color: #666;
-            font-weight: 600;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .info-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        /* PREDICTION RESULTS */
-        .results-section {
-            display: none;
-            margin-bottom: 30px;
-        }
-
-        .results-section.active {
-            display: block;
-        }
-
-        .prediction-title {
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-
-        /* ROUND CONTEXT BOX */
-        .round-context {
-            background: #e8f4f8;
-            border-left: 4px solid #667eea;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-        .context-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 4px 0;
-        }
-
-        .context-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .context-value {
-            color: #667eea;
-            font-weight: 700;
-        }
-
-        .prediction-options {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .prediction-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .prediction-card:hover {
-            transform: translateX(5px);
-            border-color: #667eea;
-        }
-
-        .prediction-card input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .prediction-card input[type="radio"]:checked + .card-content {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .card-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .radio-circle {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .prediction-card input[type="radio"]:checked + .card-content .radio-circle {
-            background: #667eea;
-        }
-
-        .prediction-card input[type="radio"]:checked + .card-content .radio-circle::after {
-            content: '✓';
-            color: white;
-            font-weight: bold;
-        }
-
-        .prediction-label {
-            flex: 1;
-        }
-
-        .prediction-name {
-            font-weight: 600;
-            color: #333;
-            display: block;
-            margin-bottom: 2px;
-            font-size: 15px;
-        }
-
-        .prediction-confidence {
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* CUSTOM OPPONENT CARD */
-        .custom-card {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffe699 100%);
-            border: 2px solid #ffc107;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .custom-card:hover {
-            transform: translateX(5px);
-            border-color: #ff9800;
-            background: linear-gradient(135deg, #ffe699 0%, #ffd966 100%);
-        }
-
-        .custom-card input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .custom-card input[type="radio"]:checked + .card-content {
-            color: #ff6f00;
-            font-weight: 600;
-        }
-
-        .custom-card .radio-circle {
-            border-color: #ff9800;
-        }
-
-        .custom-card input[type="radio"]:checked + .card-content .radio-circle {
-            background: #ff9800;
-        }
-
-        .custom-card input[type="radio"]:checked + .card-content .radio-circle::after {
-            content: '✓';
-            color: white;
-            font-weight: bold;
-        }
-
-        /* CUSTOM OPPONENT DROPDOWN */
-        .custom-dropdown-section {
-            display: none;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #fff9e6;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-        }
-
-        .custom-dropdown-section.active {
-            display: block;
-        }
-
-        .custom-dropdown-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #ff6f00;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .custom-dropdown-select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            background: white;
-            color: #333;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .custom-dropdown-select:focus {
-            outline: none;
-            border-color: #ff9800;
-            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
-        }
-
-        /* CONFIRM BUTTON */
-        .confirm-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px;
             border: none;
             border-radius: 8px;
+            font-size: 1em;
             font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .confirm-btn:hover:not(:disabled) {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .confirm-btn:disabled {
-            opacity: 0.5;
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        /* MESSAGES */
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 14px;
-        }
-
-        .message.active {
-            display: block;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* STATS */
-        .stats {
-            background: #f0f0f0;
-            border-radius: 12px;
-            padding: 15px;
+        .result-section {
             margin-top: 20px;
-            font-size: 12px;
-            color: #666;
         }
 
-        .stats-item {
-            margin: 5px 0;
+        .prediction-result {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
         }
 
-        .stats-value {
+        .prediction-result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .prediction-result h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .prediction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .prediction-table th,
+        .prediction-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .prediction-table th {
+            background: #f0f0f0;
             font-weight: 600;
             color: #333;
         }
 
-        .form-section.hidden {
+        .prediction-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .winner-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c62828;
+            margin-top: 10px;
             display: none;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
+        .error.show {
+            display: block;
+        }
 
-            h1 {
-                font-size: 24px;
-            }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
 
-            .death-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .loading.show {
+            display: block;
+        }
 
-            .round-info {
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .features strong {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .content {
                 grid-template-columns: 1fr;
             }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .stats-section {
+            margin-top: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .label {
+            color: #666;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 Magic Chess Predictor</h1>
-        <p class="subtitle">Continuous prediction mode • Dead player filtering</p>
+        <header>
+            <h1>♟️ Magic Chess Predictor</h1>
+            <p>AI-Powered Chess Match Outcome Prediction</p>
+            <div class="features">
+                <strong>Features:</strong> Continuous prediction mode • Dead player filtering
+            </div>
+        </header>
 
-        <!-- DEATH TOGGLES -->
-        <div class="death-section">
-            <div class="death-title">💀 Mark players as eliminated (won't be predicted):</div>
-            <div class="death-grid" id="deathToggleGrid"></div>
-        </div>
+        <div class="content">
+            <!-- Match & Round Selection -->
+            <div class="card">
+                <h2>📊 Select Match & Round</h2>
+                
+                <div class="form-group">
+                    <label for="matchSelect">Choose Match:</label>
+                    <select id="matchSelect">
+                        <option value="">Loading matches...</option>
+                    </select>
+                </div>
 
-        <!-- SETUP FORM -->
-        <div class="form-section" id="setupForm">
-            <div class="form-group">
-                <label for="player">🎮 Your Player:</label>
-                <select id="player">
-                    <option value="">Select Your Player</option>
-                    <option value="Player 1">Player 1</option>
-                    <option value="Player 2">Player 2</option>
-                    <option value="Player 3">Player 3</option>
-                    <option value="Player 4">Player 4</option>
-                    <option value="Player 5">Player 5</option>
-                    <option value="Player 6">Player 6</option>
-                    <option value="Player 7">Player 7</option>
-                    <option value="Player 8">Player 8</option>
-                </select>
+                <div class="form-group">
+                    <label for="roundSelect">Choose Round:</label>
+                    <select id="roundSelect">
+                        <option value="">Select a match first</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="playerSelect">Your Position (1-8):</label>
+                    <select id="playerSelect">
+                        <option value="">Select a round first</option>
+                    </select>
+                </div>
+
+                <button onclick="getPrediction()">Get Prediction</button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing match data...</p>
+                </div>
+
+                <div class="error" id="error"></div>
             </div>
 
-            <div class="form-group">
-                <label for="round">📍 Next Round to Predict:</label>
-                <select id="round">
-                    <option value="">Select Next Round</option>
-                    <option value="I-3">I-3</option>
-                    <option value="I-4">I-4</option>
-                    <option value="II-1">II-1</option>
-                    <option value="II-4">II-4</option>
-                    <option value="II-5">II-5</option>
-                    <option value="II-6">II-6</option>
-                    <option value="III-1">III-1</option>
-                    <option value="III-2">III-2</option>
-                    <option value="III-4">III-4</option>
-                    <option value="III-5">III-5</option>
-                    <option value="III-6">III-6</option>
-                    <option value="IV-1">IV-1</option>
-                    <option value="IV-2">IV-2</option>
-                    <option value="IV-4">IV-4</option>
-                    <option value="IV-5">IV-5</option>
-                    <option value="IV-6">IV-6</option>
-                    <option value="V-1">V-1</option>
-                    <option value="V-2">V-2</option>
-                    <option value="V-3">V-3</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="lastOpponent">⚔️ Last Opponent (just faced):</label>
-                <select id="lastOpponent">
-                    <option value="">Select Last Opponent</option>
-                    <option value="Player 1">Player 1</option>
-                    <option value="Player 2">Player 2</option>
-                    <option value="Player 3">Player 3</option>
-                    <option value="Player 4">Player 4</option>
-                    <option value="Player 5">Player 5</option>
-                    <option value="Player 6">Player 6</option>
-                    <option value="Player 7">Player 7</option>
-                    <option value="Player 8">Player 8</option>
-                    <option value="M.Player 1">M.Player 1</option>
-                    <option value="M.Player 2">M.Player 2</option>
-                    <option value="M.Player 3">M.Player 3</option>
-                    <option value="M.Player 4">M.Player 4</option>
-                    <option value="M.Player 5">M.Player 5</option>
-                    <option value="M.Player 6">M.Player 6</option>
-                    <option value="M.Player 7">M.Player 7</option>
-                    <option value="M.Player 8">M.Player 8</option>
-                </select>
-            </div>
-
-            <div class="button-group">
-                <button class="btn-predict" onclick="startContinuousMode()">Start Continuous Mode</button>
-                <button class="btn-reset" onclick="resetAll()">Clear All</button>
+            <!-- Prediction Results -->
+            <div class="card">
+                <h2>🎯 Prediction Results</h2>
+                <div class="prediction-result" id="predictionResult">
+                    <h3>Match Outcome Probabilities</h3>
+                    <table class="prediction-table" id="resultTable">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Probability</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultBody">
+                        </tbody>
+                    </table>
+                </div>
+                <p style="color: #999; font-size: 0.9em; margin-top: 10px;" id="noResultText">Results will appear here after prediction</p>
             </div>
         </div>
 
-        <!-- MESSAGE AREA -->
-        <div id="message" class="message"></div>
-
-        <!-- CONTINUOUS MODE DISPLAY -->
-        <div id="continuousSection" class="continuous-section">
-            <div class="round-info">
-                <div class="info-box">
-                    <div class="info-label">Your Player</div>
-                    <div class="info-value" id="displayPlayer">-</div>
+        <!-- Stats Section -->
+        <div class="card stats-section">
+            <h2>📈 Session Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="number" id="totalMatches">0</div>
+                    <div class="label">Total Matches</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-label">Next Round</div>
-                    <div class="info-value" id="displayRound">-</div>
+                <div class="stat-box">
+                    <div class="number" id="totalRounds">0</div>
+                    <div class="label">Total Rounds</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-label">Last Opponent</div>
-                    <div class="info-value" id="displayLastOpp">-</div>
+                <div class="stat-box">
+                    <div class="number" id="avgProbability">0%</div>
+                    <div class="label">Avg Accuracy</div>
                 </div>
-            </div>
-
-            <div class="button-group">
-                <button class="btn-edit" onclick="editContext()">✏️ Edit</button>
-            </div>
-        </div>
-
-        <!-- PREDICTION RESULTS -->
-        <div id="resultsSection" class="results-section">
-            <p class="prediction-title">Who you faced against this round? Select the correct opponent:</p>
-
-            <!-- ROUND CONTEXT -->
-            <div class="round-context">
-                <div class="context-row">
-                    <span class="context-label">Last opponent faced:</span>
-                    <span class="context-value" id="contextLastOpponent">-</span>
-                </div>
-                <div class="context-row">
-                    <span class="context-label">Predicting for round:</span>
-                    <span class="context-value" id="contextNextRound">-</span>
+                <div class="stat-box">
+                    <div class="number" id="predictionsCount">0</div>
+                    <div class="label">Predictions Made</div>
                 </div>
             </div>
-
-            <div class="prediction-options" id="predictionsContainer"></div>
-
-            <!-- CUSTOM OPPONENT CARD -->
-            <label class="custom-card">
-                <input type="radio" name="prediction" value="custom" onchange="toggleCustomDropdown()">
-                <div class="card-content">
-                    <div class="radio-circle"></div>
-                    <div class="prediction-label">
-                        <span class="prediction-name">⚠️ None of the above</span>
-                        <span class="prediction-confidence">Select opponent not in predictions</span>
-                    </div>
-                </div>
-            </label>
-
-            <!-- CUSTOM OPPONENT DROPDOWN -->
-            <div id="customDropdownSection" class="custom-dropdown-section">
-                <label class="custom-dropdown-label">Select opponent:</label>
-                <select id="customOpponentSelect" class="custom-dropdown-select" onchange="updateConfirmButton()">
-                    <option value="">-- Choose opponent --</option>
-                    <option value="Player 1">Player 1</option>
-                    <option value="Player 2">Player 2</option>
-                    <option value="Player 3">Player 3</option>
-                    <option value="Player 4">Player 4</option>
-                    <option value="Player 5">Player 5</option>
-                    <option value="Player 6">Player 6</option>
-                    <option value="Player 7">Player 7</option>
-                    <option value="Player 8">Player 8</option>
-                    <option value="M.Player 1">M.Player 1</option>
-                    <option value="M.Player 2">M.Player 2</option>
-                    <option value="M.Player 3">M.Player 3</option>
-                    <option value="M.Player 4">M.Player 4</option>
-                    <option value="M.Player 5">M.Player 5</option>
-                    <option value="M.Player 6">M.Player 6</option>
-                    <option value="M.Player 7">M.Player 7</option>
-                    <option value="M.Player 8">M.Player 8</option>
-                </select>
-            </div>
-
-            <button class="confirm-btn" onclick="confirmAndAdvance()" id="confirmBtn">Confirm & Continue</button>
-        </div>
-
-        <!-- STATS -->
-        <div class="stats">
-            <div class="stats-item">Session logs: <span class="stats-value" id="sessionCount">0</span></div>
-            <div class="stats-item">Dead players: <span class="stats-value" id="deadCount">0</span></div>
-            <div class="stats-item">Base model: <span class="stats-value">895 samples</span></div>
         </div>
     </div>
 
     <script>
-        // State
-        let currentState = {
-            player: null,
-            round: null,
-            lastOpponent: null
+        // Configuration
+        const ML_SERVER_URL = 'https://magic-chess-predictor--rafifshaf.replit.app/api/predict';
+        const MATCHES = ['Match-1', 'Match-2', 'Match-3', 'Match-4', 'Match-5', 'Match-6', 'Match-7', 'Match-8', 'Match-9'];
+        const POSITIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+        let matchData = {};
+        let stats = {
+            totalPredictions: 0,
+            totalMatches: 0,
+            totalRounds: 0,
+            totalAccuracy: 0
         };
 
-        let currentPredictions = [];
-        let deadPlayers = new Set();
-        let opponentsFacedBefore = [];  // NEW: Track opponents faced in tournament
-        
-        const allPlayers = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8"];
-        
-        const roundOrder = [
-            "I-3", "I-4",
-            "II-1", "II-4", "II-5", "II-6",
-            "III-1", "III-2", "III-4", "III-5", "III-6",
-            "IV-1", "IV-2", "IV-4", "IV-5", "IV-6",
-            "V-1", "V-2", "V-3"
-        ];
-
-        let sessionHistory = [];
-
-        // Initialize death toggles
-        function initDeathToggles() {
-            const grid = document.getElementById('deathToggleGrid');
-            grid.innerHTML = '';
-            allPlayers.forEach(player => {
-                const isDead = deadPlayers.has(player);
-                const html = `
-                    <label class="death-toggle ${isDead ? 'dead' : ''}">
-                        <input type="checkbox" ${isDead ? 'checked' : ''} onchange="toggleDeath('${player}')">
-                        ${player}
-                    </label>
-                `;
-                grid.innerHTML += html;
-            });
-        }
-
-        function toggleDeath(player) {
-            fetch('/api/toggle-death', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player })
-            })
-            .then(r => r.json())
-            .then(data => {
-                deadPlayers = new Set(data.dead_players);
-                initDeathToggles();
-                document.getElementById('deadCount').textContent = deadPlayers.size;
+        // Initialize
+        async function initializeApp() {
+            try {
+                const matchSelect = document.getElementById('matchSelect');
+                matchSelect.innerHTML = '';
                 
-                // If in continuous mode, refresh current prediction
-                if (currentState.player && currentState.round && currentState.lastOpponent) {
-                    getPrediction();
+                for (const match of MATCHES) {
+                    const option = document.createElement('option');
+                    option.value = match;
+                    option.textContent = match;
+                    matchSelect.appendChild(option);
                 }
+
+                stats.totalMatches = MATCHES.length;
+                updateStats();
                 
-                showMessage(`${player} is now ${deadPlayers.has(player) ? '💀 eliminated' : '✓ alive'}`, 'success');
-            })
-            .catch(e => showMessage('Error: ' + e, 'error'));
+                console.log('App initialized. ML Server URL:', ML_SERVER_URL);
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
         }
 
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = `message active ${type}`;
-            setTimeout(() => msg.classList.remove('active'), 3000);
-        }
-
-        function startContinuousMode() {
-            const player = document.getElementById('player').value;
-            const round = document.getElementById('round').value;
-            const lastOpponent = document.getElementById('lastOpponent').value;
-
-            if (!player || !round || !lastOpponent) {
-                showMessage('Please select all three options to start', 'error');
+        // Load rounds when match is selected
+        document.getElementById('matchSelect').addEventListener('change', async function() {
+            const match = this.value;
+            if (!match) {
+                document.getElementById('roundSelect').innerHTML = '<option value="">Select a match first</option>';
+                document.getElementById('playerSelect').innerHTML = '<option value="">Select a round first</option>';
                 return;
             }
 
-            currentState = { player, round, lastOpponent };
-            opponentsFacedBefore = [];  // NEW: Reset history when starting
-            
-            document.getElementById('setupForm').classList.add('hidden');
-            document.getElementById('continuousSection').classList.add('active');
-            document.getElementById('resultsSection').classList.add('active');
-
-            updateDisplay();
-            getPrediction();
-        }
-
-        function updateDisplay() {
-            document.getElementById('displayPlayer').textContent = currentState.player;
-            document.getElementById('displayRound').textContent = currentState.round;
-            document.getElementById('displayLastOpp').textContent = currentState.lastOpponent;
-            
-            // Update context display - show what we're predicting for
-            document.getElementById('contextLastOpponent').textContent = currentState.lastOpponent;
-            document.getElementById('contextNextRound').textContent = currentState.round;
-        }
-
-        function getPrediction() {
-            fetch('/api/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    player: currentState.player,
-                    round: currentState.round,
-                    last_opponent: currentState.lastOpponent,
-                    opponents_faced_before: opponentsFacedBefore,  // NEW: Send opponent history
-                    dead_players: Array.from(deadPlayers)
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) {
-                    showMessage('Error: ' + data.error, 'error');
-                    return;
+            try {
+                const response = await fetch(`/data/${match}.csv`);
+                const csv = await response.text();
+                const lines = csv.trim().split('\n');
+                const headers = lines[0].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+                
+                const roundSet = new Set();
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+                    if (parts[0]) {
+                        roundSet.add(parts[0]);
+                    }
                 }
 
-                currentPredictions = data.top3;
-                displayPredictions(data.top3);
-            })
-            .catch(e => showMessage('Network error: ' + e, 'error'));
-        }
-
-        function displayPredictions(predictions) {
-            const container = document.getElementById('predictionsContainer');
-            container.innerHTML = '';
-
-            const options = ['A', 'B', 'C'];
-            predictions.forEach((pred, idx) => {
-                const [opponent, confidence] = pred;
-                const letter = options[idx];
-
-                const html = `
-                    <label class="prediction-card">
-                        <input type="radio" name="prediction" value="${letter}" onchange="hideCustomDropdown()">
-                        <div class="card-content">
-                            <div class="radio-circle"></div>
-                            <div class="prediction-label">
-                                <span class="prediction-name">${opponent}</span>
-                                <span class="prediction-confidence">${confidence.toFixed(1)}% confidence</span>
-                            </div>
-                        </div>
-                    </label>
-                `;
-                container.innerHTML += html;
-            });
-
-            document.getElementById('confirmBtn').disabled = true;
-            hideCustomDropdown();
-        }
-
-        function toggleCustomDropdown() {
-            const section = document.getElementById('customDropdownSection');
-            const selected = document.querySelector('input[name="prediction"]:checked')?.value === 'custom';
-            
-            if (selected) {
-                section.classList.add('active');
-                updateConfirmButton();
-            } else {
-                section.classList.remove('active');
-                document.getElementById('customOpponentSelect').value = '';
-                document.getElementById('confirmBtn').disabled = false;
-            }
-        }
-
-        function hideCustomDropdown() {
-            const section = document.getElementById('customDropdownSection');
-            section.classList.remove('active');
-            document.getElementById('customOpponentSelect').value = '';
-            document.getElementById('confirmBtn').disabled = false;
-        }
-
-        function updateConfirmButton() {
-            const selectedValue = document.querySelector('input[name="prediction"]:checked')?.value;
-            
-            if (selectedValue === 'custom') {
-                const customOpponent = document.getElementById('customOpponentSelect').value;
-                document.getElementById('confirmBtn').disabled = !customOpponent;
-            } else if (selectedValue) {
-                document.getElementById('confirmBtn').disabled = false;
-            }
-        }
-
-        function confirmAndAdvance() {
-            const selectedValue = document.querySelector('input[name="prediction"]:checked')?.value;
-            if (!selectedValue) {
-                showMessage('Please select an opponent', 'error');
-                return;
-            }
-
-            let selectedOpponent;
-
-            if (selectedValue === 'custom') {
-                selectedOpponent = document.getElementById('customOpponentSelect').value;
-                if (!selectedOpponent) {
-                    showMessage('Please select a custom opponent from the dropdown', 'error');
-                    return;
-                }
-            } else {
-                const idx = selectedValue.charCodeAt(0) - 65;
-                selectedOpponent = currentPredictions[idx][0];
-            }
-
-            // Add to opponent history
-            opponentsFacedBefore.push(currentState.lastOpponent);  // NEW: Track this opponent
-
-            // Log feedback
-            fetch('/api/log-feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    player: currentState.player,
-                    round: currentState.round,
-                    last_opponent: currentState.lastOpponent,
-                    selected_option: selectedValue,
-                    prediction_options: currentPredictions
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                sessionHistory.push({
-                    player: currentState.player,
-                    round: currentState.round,
-                    lastOpponent: currentState.lastOpponent,
-                    opponent: selectedOpponent
+                const roundSelect = document.getElementById('roundSelect');
+                roundSelect.innerHTML = '<option value="">Select a round</option>';
+                
+                Array.from(roundSet).sort((a, b) => {
+                    const aIndex = parseInt(a.split('-')[1]) || 0;
+                    const bIndex = parseInt(b.split('-')[1]) || 0;
+                    const aRoman = a.split('-')[0];
+                    const bRoman = b.split('-')[0];
+                    if (aRoman !== bRoman) {
+                        const romanOrder = ['I', 'II', 'III', 'IV', 'V'];
+                        return romanOrder.indexOf(aRoman) - romanOrder.indexOf(bRoman);
+                    }
+                    return aIndex - bIndex;
+                }).forEach(round => {
+                    const option = document.createElement('option');
+                    option.value = round;
+                    option.textContent = round;
+                    roundSelect.appendChild(option);
                 });
 
-                document.getElementById('sessionCount').textContent = sessionHistory.length;
+                stats.totalRounds = roundSet.size;
+                updateStats();
+            } catch (error) {
+                console.error('Error loading rounds:', error);
+                showError('Failed to load rounds');
+            }
+        });
 
-                // Find next round
-                const currentIdx = roundOrder.indexOf(currentState.round);
-                if (currentIdx >= 0 && currentIdx < roundOrder.length - 1) {
-                    const nextRound = roundOrder[currentIdx + 1];
-                    
-                    // Update state
-                    currentState.lastOpponent = selectedOpponent;
-                    currentState.round = nextRound;
-                    
-                    updateDisplay();
-                    getPrediction();
-                    
-                    showMessage(`✓ Logged! Moving to ${nextRound}...`, 'success');
-                } else {
-                    showMessage('🎉 Match complete! No more rounds.', 'success');
-                    setTimeout(() => resetAll(), 2000);
-                }
-            })
-            .catch(e => showMessage('Error: ' + e, 'error'));
-        }
-
-        function editContext() {
-            document.getElementById('setupForm').classList.remove('hidden');
-            document.getElementById('continuousSection').classList.remove('active');
-            document.getElementById('resultsSection').classList.remove('active');
-        }
-
-        function resetAll() {
-            currentState = { player: null, round: null, lastOpponent: null };
-            currentPredictions = [];
-            sessionHistory = [];
-            opponentsFacedBefore = [];  // NEW: Clear history on reset
+        // Load player positions when round is selected
+        document.getElementById('roundSelect').addEventListener('change', async function() {
+            const match = document.getElementById('matchSelect').value;
+            const round = this.value;
             
-            document.getElementById('player').value = '';
-            document.getElementById('round').value = '';
-            document.getElementById('lastOpponent').value = '';
-            document.getElementById('setupForm').classList.remove('hidden');
-            document.getElementById('continuousSection').classList.remove('active');
-            document.getElementById('resultsSection').classList.remove('active');
-            document.getElementById('sessionCount').textContent = '0';
+            if (!round) {
+                document.getElementById('playerSelect').innerHTML = '<option value="">Select a round first</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/data/${match}.csv`);
+                const csv = await response.text();
+                const lines = csv.trim().split('\n');
+                
+                const livePositions = new Set();
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+                    if (parts[0] === round) {
+                        for (let j = 1; j < parts.length; j++) {
+                            const player = parts[j].trim().replace(/"/g, '');
+                            if (player && player !== 'Creep' && player !== 'Null' && !player.startsWith('M.')) {
+                                livePositions.add(j.toString());
+                            }
+                        }
+                    }
+                }
+
+                const playerSelect = document.getElementById('playerSelect');
+                playerSelect.innerHTML = '<option value="">Select your position</option>';
+                
+                POSITIONS.forEach(pos => {
+                    if (livePositions.has(pos)) {
+                        const option = document.createElement('option');
+                        option.value = pos;
+                        option.textContent = `Position ${pos}`;
+                        playerSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading positions:', error);
+            }
+        });
+
+        // Get prediction from Replit ML server
+        async function getPrediction() {
+            const match = document.getElementById('matchSelect').value;
+            const round = document.getElementById('roundSelect').value;
+            const position = document.getElementById('playerSelect').value;
+
+            if (!match || !round || !position) {
+                showError('Please select match, round, and position');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(ML_SERVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        match: match,
+                        round: round,
+                        position: parseInt(position)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data, position);
+                stats.totalPredictions++;
+                updateStats();
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showError(`Failed to get prediction: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
         }
 
-        // Load on page load
-        initDeathToggles();
-        fetch('/api/session-stats')
-            .then(r => r.json())
-            .then(data => {
-                deadPlayers = new Set(data.dead_players);
-                document.getElementById('deadCount').textContent = deadPlayers.size;
-                initDeathToggles();
-            });
+        // Display results
+        function displayResults(data, yourPosition) {
+            const resultBody = document.getElementById('resultBody');
+            resultBody.innerHTML = '';
+
+            if (data.probabilities && typeof data.probabilities === 'object') {
+                const predictions = Object.entries(data.probabilities)
+                    .map(([pos, prob]) => ({
+                        position: pos,
+                        probability: prob,
+                        isYou: pos === yourPosition
+                    }))
+                    .sort((a, b) => b.probability - a.probability);
+
+                predictions.forEach(pred => {
+                    const row = document.createElement('tr');
+                    const percentage = (pred.probability * 100).toFixed(2);
+                    
+                    row.innerHTML = `
+                        <td><strong>Position ${pred.position}${pred.isYou ? ' (You)' : ''}</strong></td>
+                        <td>${percentage}%</td>
+                        <td>${predictions[0].position === pred.position ? '<span class="winner-badge">LIKELY WINNER</span>' : ''}</td>
+                    `;
+                    resultBody.appendChild(row);
+                });
+
+                document.getElementById('predictionResult').classList.add('show');
+                document.getElementById('noResultText').style.display = 'none';
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function updateStats() {
+            document.getElementById('totalMatches').textContent = stats.totalMatches;
+            document.getElementById('totalRounds').textContent = stats.totalRounds;
+            document.getElementById('predictionsCount').textContent = stats.totalPredictions;
+            const avgAcc = stats.totalPredictions > 0 ? 
+                Math.round((stats.totalAccuracy / stats.totalPredictions) * 100) : 0;
+            document.getElementById('avgProbability').textContent = avgAcc + '%';
+        }
+
+        // Start app
+        window.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
