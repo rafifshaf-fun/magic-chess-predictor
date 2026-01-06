@@ -529,10 +529,9 @@
             </div>
 
             <div class="form-group">
-                <label for="round">📍 Current Round:</label>
+                <label for="round">📍 Next Round to Predict:</label>
                 <select id="round">
-                    <option value="">Select Starting Round</option>
-                    <option value="I-2">I-2</option>
+                    <option value="">Select Next Round</option>
                     <option value="I-3">I-3</option>
                     <option value="I-4">I-4</option>
                     <option value="II-1">II-1</option>
@@ -595,7 +594,7 @@
                     <div class="info-value" id="displayPlayer">-</div>
                 </div>
                 <div class="info-box">
-                    <div class="info-label">Current Round</div>
+                    <div class="info-label">Next Round</div>
                     <div class="info-value" id="displayRound">-</div>
                 </div>
                 <div class="info-box">
@@ -620,8 +619,8 @@
                     <span class="context-value" id="contextLastOpponent">-</span>
                 </div>
                 <div class="context-row">
-                    <span class="context-label">In round:</span>
-                    <span class="context-value" id="contextLastRound">-</span>
+                    <span class="context-label">Predicting for round:</span>
+                    <span class="context-value" id="contextNextRound">-</span>
                 </div>
             </div>
 
@@ -687,7 +686,7 @@
         const allPlayers = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8"];
         
         const roundOrder = [
-            "I-2", "I-3", "I-4",
+            "I-3", "I-4",
             "II-1", "II-4", "II-5", "II-6",
             "III-1", "III-2", "III-4", "III-5", "III-6",
             "IV-1", "IV-2", "IV-4", "IV-5", "IV-6",
@@ -766,9 +765,9 @@
             document.getElementById('displayRound').textContent = currentState.round;
             document.getElementById('displayLastOpp').textContent = currentState.lastOpponent;
             
-            // Update context display
+            // Update context display - show what we're predicting for
             document.getElementById('contextLastOpponent').textContent = currentState.lastOpponent;
-            document.getElementById('contextLastRound').textContent = currentState.round;
+            document.getElementById('contextNextRound').textContent = currentState.round;
         }
 
         function getPrediction() {
