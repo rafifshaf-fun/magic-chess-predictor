@@ -683,6 +683,8 @@
 
         let currentPredictions = [];
         let deadPlayers = new Set();
+        let opponentsFacedBefore = [];  // NEW: Track opponents faced in tournament
+        
         const allPlayers = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8"];
         
         const roundOrder = [
@@ -751,6 +753,7 @@
             }
 
             currentState = { player, round, lastOpponent };
+            opponentsFacedBefore = [];  // NEW: Reset history when starting
             
             document.getElementById('setupForm').classList.add('hidden');
             document.getElementById('continuousSection').classList.add('active');
@@ -777,7 +780,9 @@
                 body: JSON.stringify({
                     player: currentState.player,
                     round: currentState.round,
-                    last_opponent: currentState.lastOpponent
+                    last_opponent: currentState.lastOpponent,
+                    opponents_faced_before: opponentsFacedBefore,  // NEW: Send opponent history
+                    dead_players: Array.from(deadPlayers)
                 })
             })
             .then(r => r.json())
@@ -873,6 +878,9 @@
                 selectedOpponent = currentPredictions[idx][0];
             }
 
+            // Add to opponent history
+            opponentsFacedBefore.push(currentState.lastOpponent);  // NEW: Track this opponent
+
             // Log feedback
             fetch('/api/log-feedback', {
                 method: 'POST',
@@ -927,6 +935,7 @@
             currentState = { player: null, round: null, lastOpponent: null };
             currentPredictions = [];
             sessionHistory = [];
+            opponentsFacedBefore = [];  // NEW: Clear history on reset
             
             document.getElementById('player').value = '';
             document.getElementById('round').value = '';

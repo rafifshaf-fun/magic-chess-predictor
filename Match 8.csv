@@ -1,0 +1,25 @@
+,Player 1,Player 2,Player 3,Player 4,Player 5,Player 6,Player 7,Player 8
+I-1,Creep,Creep,Creep,Creep,Creep,Creep,Creep,Creep
+I-2,Player 2,Player 1,Player 6,Player 7,Player 8,Player 3,Player 4,Player 5
+I-3,Player 3,Player 4,Player 1,Player 2,Player 7,Player 8,Player 5,Player 6
+I-4,Player 8,Player 5,Player 7,Player 6,Player 2,Player 4,Player 3,Player 1
+II-1,Player 7,Player 6,Player 8,Player 5,Player 4,Player 2,Player 1,Player 3
+II-2,Player 6,Player 7,Player 5,Player 8,Player 3,Player 1,Player 2,Player 4
+II-3,Creep,Creep,Creep,Creep,Creep,Creep,Creep,Creep
+II-4,Player 4,Player 3,Player 2,Player 1,Player 6,Player 5,Player 8,Player 7
+II-5,Player 5,Player 8,Player 4,Player 3,Player 1,Player 7,Player 6,Player 2
+II-6,Player 2,Player 1,Player 6,Player 7,Player 8,Player 3,Player 4,Player 5
+III-1,Player 3,Player 4,Player 1,Player 2,Player 7,Player 8,Player 5,Player 6
+III-2,Player 8,Player 5,Player 7,Player 6,Player 2,Player 4,Player 3,Player 1
+III-3,Creep,Creep,Creep,Creep,Creep,Creep,Creep,Creep
+III-4,Player 7,Player 6,Player 8,Player 5,Player 4,Player 2,Player 1,Player 3
+III-5,Player 6,Player 7,Player 5,Player 8,Player 3,Player 1,Player 2,Player 4
+III-6,Player 4,Player 3,Player 2,Player 1,Player 6,Player 5,Player 8,Player 7
+IV-1,Null,Player 4,Null,Player 2,Player 8,Player 7,Player 6,Player 5
+IV-2,Null,Player 8,Null,Player 6,Null,Player 4,M.Player 2,Player 2
+IV-3,Null,Creep,Null,Creep,Null,Creep,Creep,Creep
+IV-4,Null,M.Player 7,Null,Player 7,Null,Player 8,Player 4,Player 6
+IV-5,Null,Player 4,Null,Player 2,Null,Player 7,Player 6,Null
+IV-6,Null,M.Player 6,Null,Player 7,Null,Player 4,Null,Null
+V-1,Null,Player 4,Null,Player 2,Null,M.Player 2,Null,Null
+V-2,Null,Player 7,Null,Null,Null,Player 2,Null,Null
