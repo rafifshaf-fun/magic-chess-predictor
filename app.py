@@ -1,7 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 # Your Render ML server URL
 ML_SERVER = os.getenv("ML_SERVER_URL", "https://magic-chess-ml.onrender.com")
@@ -49,4 +53,4 @@ def log_feedback():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
