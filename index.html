@@ -226,6 +226,32 @@
             font-size: 16px;
         }
 
+        /* ROUND CONTEXT BOX */
+        .round-context {
+            background: #e8f4f8;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .context-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+
+        .context-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .context-value {
+            color: #667eea;
+            font-weight: 700;
+        }
+
         .prediction-options {
             display: grid;
             grid-template-columns: 1fr;
@@ -397,7 +423,7 @@
             font-size: 14px;
         }
 
-        .confirm-btn:hover {
+        .confirm-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
@@ -587,6 +613,18 @@
         <div id="resultsSection" class="results-section">
             <p class="prediction-title">Who you faced against this round? Select the correct opponent:</p>
 
+            <!-- ROUND CONTEXT -->
+            <div class="round-context">
+                <div class="context-row">
+                    <span class="context-label">Last opponent faced:</span>
+                    <span class="context-value" id="contextLastOpponent">-</span>
+                </div>
+                <div class="context-row">
+                    <span class="context-label">In round:</span>
+                    <span class="context-value" id="contextLastRound">-</span>
+                </div>
+            </div>
+
             <div class="prediction-options" id="predictionsContainer"></div>
 
             <!-- CUSTOM OPPONENT CARD -->
@@ -604,7 +642,7 @@
             <!-- CUSTOM OPPONENT DROPDOWN -->
             <div id="customDropdownSection" class="custom-dropdown-section">
                 <label class="custom-dropdown-label">Select opponent:</label>
-                <select id="customOpponentSelect" class="custom-dropdown-select">
+                <select id="customOpponentSelect" class="custom-dropdown-select" onchange="updateConfirmButton()">
                     <option value="">-- Choose opponent --</option>
                     <option value="Player 1">Player 1</option>
                     <option value="Player 2">Player 2</option>
@@ -727,6 +765,10 @@
             document.getElementById('displayPlayer').textContent = currentState.player;
             document.getElementById('displayRound').textContent = currentState.round;
             document.getElementById('displayLastOpp').textContent = currentState.lastOpponent;
+            
+            // Update context display
+            document.getElementById('contextLastOpponent').textContent = currentState.lastOpponent;
+            document.getElementById('contextLastRound').textContent = currentState.round;
         }
 
         function getPrediction() {
@@ -786,10 +828,11 @@
             
             if (selected) {
                 section.classList.add('active');
-                document.getElementById('confirmBtn').disabled = true;
+                updateConfirmButton();
             } else {
                 section.classList.remove('active');
                 document.getElementById('customOpponentSelect').value = '';
+                document.getElementById('confirmBtn').disabled = false;
             }
         }
 
@@ -798,6 +841,17 @@
             section.classList.remove('active');
             document.getElementById('customOpponentSelect').value = '';
             document.getElementById('confirmBtn').disabled = false;
+        }
+
+        function updateConfirmButton() {
+            const selectedValue = document.querySelector('input[name="prediction"]:checked')?.value;
+            
+            if (selectedValue === 'custom') {
+                const customOpponent = document.getElementById('customOpponentSelect').value;
+                document.getElementById('confirmBtn').disabled = !customOpponent;
+            } else if (selectedValue) {
+                document.getElementById('confirmBtn').disabled = false;
+            }
         }
 
         function confirmAndAdvance() {
