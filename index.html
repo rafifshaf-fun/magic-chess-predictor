@@ -156,6 +156,59 @@
             background: #e0e0e0;
         }
 
+        .btn-edit {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+        }
+
+        .btn-edit:hover {
+            background: #e0e0e0;
+        }
+
+        /* CONTINUOUS MODE DISPLAY */
+        .continuous-section {
+            display: none;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f5f7fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .continuous-section.active {
+            display: block;
+        }
+
+        .round-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
         /* PREDICTION RESULTS */
         .results-section {
             display: none;
@@ -206,10 +259,6 @@
             font-weight: 600;
         }
 
-        .prediction-card input[type="radio"]:checked {
-            accent-color: #667eea;
-        }
-
         .card-content {
             display: flex;
             align-items: center;
@@ -246,29 +295,12 @@
             color: #333;
             display: block;
             margin-bottom: 2px;
+            font-size: 15px;
         }
 
         .prediction-confidence {
             font-size: 12px;
             color: #666;
-        }
-
-        /* CUSTOM OPPONENT */
-        .custom-section {
-            background: #f9f9f9;
-            border: 2px dashed #ddd;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .custom-section label {
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .custom-section input {
-            margin-bottom: 10px;
         }
 
         /* CONFIRM BUTTON */
@@ -287,6 +319,11 @@
         .confirm-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* MESSAGES */
@@ -333,6 +370,10 @@
             color: #333;
         }
 
+        .form-section.hidden {
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -345,13 +386,17 @@
             .death-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .round-info {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎯 Magic Chess Predictor</h1>
-        <p class="subtitle">Session-based learning • Dead player filtering</p>
+        <p class="subtitle">Continuous prediction mode • Dead player filtering</p>
 
         <!-- DEATH TOGGLES -->
         <div class="death-section">
@@ -359,12 +404,12 @@
             <div class="death-grid" id="deathToggleGrid"></div>
         </div>
 
-        <!-- INPUT SECTION -->
-        <div class="form-section">
+        <!-- SETUP FORM -->
+        <div class="form-section" id="setupForm">
             <div class="form-group">
-                <label for="player">Player:</label>
+                <label for="player">🎮 Your Player:</label>
                 <select id="player">
-                    <option value="">Select Player</option>
+                    <option value="">Select Your Player</option>
                     <option value="Player 1">Player 1</option>
                     <option value="Player 2">Player 2</option>
                     <option value="Player 3">Player 3</option>
@@ -377,38 +422,34 @@
             </div>
 
             <div class="form-group">
-                <label for="round">Round:</label>
+                <label for="round">📍 Current Round:</label>
                 <select id="round">
-                    <option value="">Select Round</option>
-                    <option value="I-1">I-1</option>
+                    <option value="">Select Starting Round</option>
                     <option value="I-2">I-2</option>
                     <option value="I-3">I-3</option>
                     <option value="I-4">I-4</option>
                     <option value="II-1">II-1</option>
-                    <option value="II-2">II-2</option>
-                    <option value="II-3">II-3</option>
                     <option value="II-4">II-4</option>
                     <option value="II-5">II-5</option>
                     <option value="II-6">II-6</option>
                     <option value="III-1">III-1</option>
                     <option value="III-2">III-2</option>
-                    <option value="III-3">III-3</option>
                     <option value="III-4">III-4</option>
                     <option value="III-5">III-5</option>
                     <option value="III-6">III-6</option>
                     <option value="IV-1">IV-1</option>
                     <option value="IV-2">IV-2</option>
-                    <option value="IV-3">IV-3</option>
                     <option value="IV-4">IV-4</option>
                     <option value="IV-5">IV-5</option>
                     <option value="IV-6">IV-6</option>
                     <option value="V-1">V-1</option>
                     <option value="V-2">V-2</option>
+                    <option value="V-3">V-3</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="lastOpponent">Last Opponent:</label>
+                <label for="lastOpponent">⚔️ Last Opponent (just faced):</label>
                 <select id="lastOpponent">
                     <option value="">Select Last Opponent</option>
                     <option value="Player 1">Player 1</option>
@@ -419,54 +460,93 @@
                     <option value="Player 6">Player 6</option>
                     <option value="Player 7">Player 7</option>
                     <option value="Player 8">Player 8</option>
+                    <option value="M.Player 1">M.Player 1</option>
+                    <option value="M.Player 2">M.Player 2</option>
+                    <option value="M.Player 3">M.Player 3</option>
+                    <option value="M.Player 4">M.Player 4</option>
+                    <option value="M.Player 5">M.Player 5</option>
+                    <option value="M.Player 6">M.Player 6</option>
+                    <option value="M.Player 7">M.Player 7</option>
+                    <option value="M.Player 8">M.Player 8</option>
                 </select>
             </div>
 
             <div class="button-group">
-                <button class="btn-predict" onclick="getPrediction()">Get Prediction</button>
-                <button class="btn-reset" onclick="resetForm()">Clear</button>
+                <button class="btn-predict" onclick="startContinuousMode()">Start Continuous Mode</button>
+                <button class="btn-reset" onclick="resetAll()">Clear All</button>
             </div>
         </div>
 
         <!-- MESSAGE AREA -->
         <div id="message" class="message"></div>
 
-        <!-- RESULTS SECTION -->
+        <!-- CONTINUOUS MODE DISPLAY -->
+        <div id="continuousSection" class="continuous-section">
+            <div class="round-info">
+                <div class="info-box">
+                    <div class="info-label">Your Player</div>
+                    <div class="info-value" id="displayPlayer">-</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Current Round</div>
+                    <div class="info-value" id="displayRound">-</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Last Opponent</div>
+                    <div class="info-value" id="displayLastOpp">-</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-edit" onclick="editContext()">✏️ Edit</button>
+            </div>
+        </div>
+
+        <!-- PREDICTION RESULTS -->
         <div id="resultsSection" class="results-section">
-            <p class="prediction-title">Which opponent did you face? Select A, B, C or enter custom:</p>
+            <p class="prediction-title">Who will you face in the next round? Select the correct opponent:</p>
 
             <div class="prediction-options" id="predictionsContainer"></div>
 
-            <div class="custom-section">
-                <label>
-                    <input type="radio" name="prediction" value="custom" onchange="toggleCustom()">
-                    None of these - Enter actual opponent:
-                </label>
-                <input type="text" id="customOpponent" placeholder="Enter opponent name" style="display:none;">
-            </div>
-
-            <button class="confirm-btn" onclick="confirmFeedback()">Confirm & Log</button>
+            <button class="confirm-btn" onclick="confirmAndAdvance()" id="confirmBtn">Confirm & Continue</button>
         </div>
 
         <!-- STATS -->
         <div class="stats">
             <div class="stats-item">Session logs: <span class="stats-value" id="sessionCount">0</span></div>
             <div class="stats-item">Dead players: <span class="stats-value" id="deadCount">0</span></div>
-            <div class="stats-item">Base model samples: <span class="stats-value">376</span></div>
+            <div class="stats-item">Base model: <span class="stats-value">895 samples</span></div>
         </div>
     </div>
 
     <script>
+        // State
+        let currentState = {
+            player: null,
+            round: null,
+            lastOpponent: null
+        };
+
         let currentPredictions = [];
-        let deadPlayers = [];
+        let deadPlayers = new Set();
         const allPlayers = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8"];
+        
+        const roundOrder = [
+            "I-2", "I-3", "I-4",
+            "II-1", "II-4", "II-5", "II-6",
+            "III-1", "III-2", "III-4", "III-5", "III-6",
+            "IV-1", "IV-2", "IV-4", "IV-5", "IV-6",
+            "V-1", "V-2", "V-3"
+        ];
+
+        let sessionHistory = [];
 
         // Initialize death toggles
         function initDeathToggles() {
             const grid = document.getElementById('deathToggleGrid');
             grid.innerHTML = '';
             allPlayers.forEach(player => {
-                const isDead = deadPlayers.includes(player);
+                const isDead = deadPlayers.has(player);
                 const html = `
                     <label class="death-toggle ${isDead ? 'dead' : ''}">
                         <input type="checkbox" ${isDead ? 'checked' : ''} onchange="toggleDeath('${player}')">
@@ -485,10 +565,16 @@
             })
             .then(r => r.json())
             .then(data => {
-                deadPlayers = data.dead_players;
+                deadPlayers = new Set(data.dead_players);
                 initDeathToggles();
-                document.getElementById('deadCount').textContent = deadPlayers.length;
-                showMessage(`${player} is now ${deadPlayers.includes(player) ? '💀 eliminated' : '✓ alive'}`, 'success');
+                document.getElementById('deadCount').textContent = deadPlayers.size;
+                
+                // If in continuous mode, refresh current prediction
+                if (currentState.player && currentState.round && currentState.lastOpponent) {
+                    getPrediction();
+                }
+                
+                showMessage(`${player} is now ${deadPlayers.has(player) ? '💀 eliminated' : '✓ alive'}`, 'success');
             })
             .catch(e => showMessage('Error: ' + e, 'error'));
         }
@@ -497,25 +583,44 @@
             const msg = document.getElementById('message');
             msg.textContent = text;
             msg.className = `message active ${type}`;
-            setTimeout(() => {
-                msg.classList.remove('active');
-            }, 3000);
+            setTimeout(() => msg.classList.remove('active'), 3000);
         }
 
-        function getPrediction() {
+        function startContinuousMode() {
             const player = document.getElementById('player').value;
             const round = document.getElementById('round').value;
             const lastOpponent = document.getElementById('lastOpponent').value;
 
             if (!player || !round || !lastOpponent) {
-                showMessage('Please select Player, Round, and Last Opponent', 'error');
+                showMessage('Please select all three options to start', 'error');
                 return;
             }
 
+            currentState = { player, round, lastOpponent };
+            
+            document.getElementById('setupForm').classList.add('hidden');
+            document.getElementById('continuousSection').classList.add('active');
+            document.getElementById('resultsSection').classList.add('active');
+
+            updateDisplay();
+            getPrediction();
+        }
+
+        function updateDisplay() {
+            document.getElementById('displayPlayer').textContent = currentState.player;
+            document.getElementById('displayRound').textContent = currentState.round;
+            document.getElementById('displayLastOpp').textContent = currentState.lastOpponent;
+        }
+
+        function getPrediction() {
             fetch('/api/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player, round, last_opponent: lastOpponent })
+                body: JSON.stringify({
+                    player: currentState.player,
+                    round: currentState.round,
+                    last_opponent: currentState.lastOpponent
+                })
             })
             .then(r => r.json())
             .then(data => {
@@ -526,13 +631,6 @@
 
                 currentPredictions = data.top3;
                 displayPredictions(data.top3);
-                document.getElementById('resultsSection').classList.add('active');
-                
-                let msg = `Prediction ready!`;
-                if (data.dead_players.length > 0) {
-                    msg += ` (${data.dead_players.join(', ')} excluded)`;
-                }
-                showMessage(msg, 'success');
             })
             .catch(e => showMessage('Network error: ' + e, 'error'));
         }
@@ -548,11 +646,11 @@
 
                 const html = `
                     <label class="prediction-card">
-                        <input type="radio" name="prediction" value="${letter}">
+                        <input type="radio" name="prediction" value="${letter}" onchange="updateConfirmBtn()">
                         <div class="card-content">
                             <div class="radio-circle"></div>
                             <div class="prediction-label">
-                                <span class="prediction-name">${letter}: ${opponent}</span>
+                                <span class="prediction-name">${opponent}</span>
                                 <span class="prediction-confidence">${confidence.toFixed(1)}% confidence</span>
                             </div>
                         </div>
@@ -560,84 +658,97 @@
                 `;
                 container.innerHTML += html;
             });
+
+            document.getElementById('confirmBtn').disabled = true;
         }
 
-        function toggleCustom() {
-            const customInput = document.getElementById('customOpponent');
-            const isChecked = document.querySelector('input[name="prediction"][value="custom"]').checked;
-            customInput.style.display = isChecked ? 'block' : 'none';
+        function updateConfirmBtn() {
+            document.getElementById('confirmBtn').disabled = false;
         }
 
-        function confirmFeedback() {
-            const player = document.getElementById('player').value;
-            const round = document.getElementById('round').value;
-            const lastOpponent = document.getElementById('lastOpponent').value;
-
-            let selectedOption = document.querySelector('input[name="prediction"]:checked')?.value;
-            if (!selectedOption) {
-                showMessage('Please select an option', 'error');
+        function confirmAndAdvance() {
+            const selectedLetter = document.querySelector('input[name="prediction"]:checked')?.value;
+            if (!selectedLetter) {
+                showMessage('Please select an opponent', 'error');
                 return;
             }
 
-            let actualOpponent = selectedOption;
-            if (selectedOption === 'custom') {
-                actualOpponent = document.getElementById('customOpponent').value.trim();
-                if (!actualOpponent) {
-                    showMessage('Please enter the actual opponent', 'error');
-                    return;
-                }
-            }
+            const idx = selectedLetter.charCodeAt(0) - 65;
+            const selectedOpponent = currentPredictions[idx][0];
 
+            // Log feedback
             fetch('/api/log-feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    player,
-                    round,
-                    last_opponent: lastOpponent,
-                    selected_option: selectedOption,
+                    player: currentState.player,
+                    round: currentState.round,
+                    last_opponent: currentState.lastOpponent,
+                    selected_option: selectedLetter,
                     prediction_options: currentPredictions
                 })
             })
             .then(r => r.json())
             .then(data => {
-                if (data.error) {
-                    showMessage('Error: ' + data.error, 'error');
-                    return;
-                }
+                sessionHistory.push({
+                    player: currentState.player,
+                    round: currentState.round,
+                    lastOpponent: currentState.lastOpponent,
+                    opponent: selectedOpponent
+                });
 
-                document.getElementById('sessionCount').textContent = data.session_size;
-                showMessage(`✓ Logged: ${actualOpponent} was your opponent!`, 'success');
-                resetForm();
+                document.getElementById('sessionCount').textContent = sessionHistory.length;
+
+                // Find next round
+                const currentIdx = roundOrder.indexOf(currentState.round);
+                if (currentIdx >= 0 && currentIdx < roundOrder.length - 1) {
+                    const nextRound = roundOrder[currentIdx + 1];
+                    
+                    // Update state
+                    currentState.lastOpponent = selectedOpponent;
+                    currentState.round = nextRound;
+                    
+                    updateDisplay();
+                    getPrediction();
+                    
+                    showMessage(`✓ Logged! Moving to ${nextRound}...`, 'success');
+                } else {
+                    showMessage('🎉 Match complete! No more rounds.', 'success');
+                    setTimeout(() => resetAll(), 2000);
+                }
             })
-            .catch(e => showMessage('Network error: ' + e, 'error'));
+            .catch(e => showMessage('Error: ' + e, 'error'));
         }
 
-        function resetForm() {
+        function editContext() {
+            document.getElementById('setupForm').classList.remove('hidden');
+            document.getElementById('continuousSection').classList.remove('active');
+            document.getElementById('resultsSection').classList.remove('active');
+        }
+
+        function resetAll() {
+            currentState = { player: null, round: null, lastOpponent: null };
+            currentPredictions = [];
+            sessionHistory = [];
+            
             document.getElementById('player').value = '';
             document.getElementById('round').value = '';
             document.getElementById('lastOpponent').value = '';
+            document.getElementById('setupForm').classList.remove('hidden');
+            document.getElementById('continuousSection').classList.remove('active');
             document.getElementById('resultsSection').classList.remove('active');
-            document.getElementById('customOpponent').value = '';
-            document.getElementById('customOpponent').style.display = 'none';
-
-            updateStats();
-        }
-
-        function updateStats() {
-            fetch('/api/session-stats')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('sessionCount').textContent = data.session_matches_logged;
-                    deadPlayers = data.dead_players;
-                    document.getElementById('deadCount').textContent = deadPlayers.length;
-                    initDeathToggles();
-                });
+            document.getElementById('sessionCount').textContent = '0';
         }
 
         // Load on page load
         initDeathToggles();
-        updateStats();
+        fetch('/api/session-stats')
+            .then(r => r.json())
+            .then(data => {
+                deadPlayers = new Set(data.dead_players);
+                document.getElementById('deadCount').textContent = deadPlayers.size;
+                initDeathToggles();
+            });
     </script>
 </body>
 </html>
