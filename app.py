@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -8,7 +9,15 @@ CORS(app)
 # Serve CSV files from root directory
 @app.route('/data/<filename>')
 def serve_csv(filename):
-    return send_from_directory('.', filename)
+    try:
+        print(f"Serving: {filename}")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Files in current dir: {os.listdir('.')}")
+        return send_from_directory('.', filename)
+    except Exception as e:
+        print(f"Error serving CSV: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 dead_players = set()
 
