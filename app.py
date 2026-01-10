@@ -1,9 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
 app = Flask(__name__)
 CORS(app)
+
+# Serve CSV files from root directory
+@app.route('/data/<filename>')
+def serve_csv(filename):
+    return send_from_directory('.', filename)
 
 dead_players = set()
 
