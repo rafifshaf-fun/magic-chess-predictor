@@ -1,10 +1,15 @@
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
 import os
-import traceback
 
 app = Flask(__name__)
-CORS(app)
+
+# Manual CORS headers - no external dependency needed
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 # Serve CSV files from root directory
 @app.route('/data/<filename>')
@@ -16,7 +21,6 @@ def serve_csv(filename):
         return send_from_directory('.', filename)
     except Exception as e:
         print(f"Error serving CSV: {e}")
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 dead_players = set()
