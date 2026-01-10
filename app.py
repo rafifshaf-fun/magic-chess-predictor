@@ -3,9 +3,6 @@ import os
 
 app = Flask(__name__)
 
-# Your Render ML server URL
-ML_SERVER = os.getenv("ML_SERVER_URL", "https://magic-chess-ml.onrender.com")
-
 dead_players = set()
 
 @app.route('/api/session-stats', methods=['GET'])
@@ -14,35 +11,22 @@ def session_stats():
 
 @app.route('/api/toggle-death', methods=['POST'])
 def toggle_death():
-    data = request.json
+    data = request.json or {}
     player = data.get('player', '')
-    
     if player in dead_players:
         dead_players.discard(player)
     else:
         dead_players.add(player)
-    
     return jsonify({'dead_players': list(dead_players)})
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
-    """Forward prediction request to Render ML server"""
-    try:
-        import requests
-        
-        data = request.json
-        
-        # Call the ML server
-        response = requests.post(
-            f"{ML_SERVER}/api/predict",
-            json=data,
-            timeout=30
-        )
-        
-        return response.json(), response.status_code
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    data = request.json or {}
+    # TEMP: just confirm the wiring works
+    return jsonify({
+        "ok": True,
+        "received": data
+    }), 200
 
 @app.route('/api/log-feedback', methods=['POST'])
 def log_feedback():
