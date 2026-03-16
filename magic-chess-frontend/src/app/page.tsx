@@ -200,7 +200,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* Predictions Display */}
+           {/* Predictions Display */}
             {predictions.length > 0 && (
               <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">📊 Next Opponent Predictions</h2>
@@ -211,25 +211,33 @@ export default function Home() {
                     return (
                       <button
                         key={idx}
-                        onClick={() => !isOther && handleSelectPrediction(pred.opponent)}
-                        disabled={isOther}
-                        className={`w-full text-left p-4 border-2 rounded-lg transition transform ${
-                          isOther 
-                            ? 'bg-gray-100 border-gray-300 opacity-70 cursor-not-allowed' 
-                            : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-500 hover:shadow-lg hover:scale-102 cursor-pointer'
-                        }`}
+                        onClick={() => {
+                          if (!isOther) {
+                            // Normal behavior: auto-predict the next round
+                            handleSelectPrediction(pred.opponent);
+                          } else {
+                            // "Other" behavior: Just advance the round, don't auto-predict
+                            const currentRoundIdx = ROUNDS.indexOf(currentRound);
+                            if (currentRoundIdx < ROUNDS.length - 1) {
+                              setCurrentRound(ROUNDS[currentRoundIdx + 1]);
+                              // Optional: You can set this to empty or leave it as is to force them to change the dropdown
+                              // setLastOpponent(''); 
+                            }
+                          }
+                        }}
+                        className="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg hover:border-blue-500 hover:shadow-lg transition transform hover:scale-102 cursor-pointer"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className={`text-xl font-bold ${isOther ? 'text-gray-500' : 'text-gray-800'}`}>
+                            <p className="text-xl font-bold text-gray-800">
                               {pred.opponent}
                             </p>
                             <p className="text-sm text-gray-600">
-                              {isOther ? 'Unpredictable edge cases' : 'Click to continue prediction'}
+                              {isOther ? 'Click to manually select your surprise opponent' : 'Click to continue prediction'}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className={`text-3xl font-bold ${isOther ? 'text-gray-500' : 'text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text'}`}>
+                            <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
                               {pred.probability}%
                             </p>
                           </div>
@@ -241,6 +249,7 @@ export default function Home() {
                 <p className="text-xs text-gray-500 mt-4">💡 Tip: Click on any opponent to continue the prediction chain</p>
               </div>
             )}
+
 
             {/* Prediction History */}
             {history.length > 0 && (
