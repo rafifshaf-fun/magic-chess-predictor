@@ -1,6 +1,6 @@
-// pages/index.tsx
-"use client" 
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import axios from 'axios';
 
 const PLAYERS = Array.from({ length: 8 }, (_, i) => `Player ${i + 1}`);
@@ -28,21 +28,21 @@ export default function Home() {
   const [currentRound, setCurrentRound] = useState<string>('I-2');
   const [lastOpponent, setLastOpponent] = useState<string>('Player 3');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<PredictionResult[]>([]);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const handlePredict = async () => {
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
       const response = await axios.post(`${apiUrl}/api/predict`, {
         player: selectedPlayer,
         current_round: currentRound,
-        last_opponent: lastOpponent,
+        last_opponent: lastOpponent
       });
 
       const nextPredictions = response.data.next_predictions;
@@ -51,11 +51,7 @@ export default function Home() {
       // Add to history
       setHistory([
         ...history,
-        {
-          round: currentRound,
-          opponent: lastOpponent,
-          predictions: nextPredictions,
-        },
+        { round: currentRound, opponent: lastOpponent, predictions: nextPredictions }
       ]);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to get prediction');
@@ -72,36 +68,25 @@ export default function Home() {
       const nextRound = ROUNDS[currentRoundIdx + 1];
       setCurrentRound(nextRound);
       setLastOpponent(opponent);
-      
+
       // Auto-predict for next round
-      setTimeout(() => {
-        handlePredictWithValues(selectedPlayer, nextRound, opponent);
-      }, 100);
+      setTimeout(() => handlePredictWithValues(selectedPlayer, nextRound, opponent), 100);
     }
   };
 
-  const handlePredictWithValues = async (
-    player: string,
-    round: string,
-    opponent: string
-  ) => {
+  const handlePredictWithValues = async (player: string, round: string, opponent: string) => {
     try {
       const response = await axios.post(`${apiUrl}/api/predict`, {
         player: player,
         current_round: round,
-        last_opponent: opponent,
+        last_opponent: opponent
       });
 
       const nextPredictions = response.data.next_predictions;
       setPredictions(nextPredictions);
-
-      setHistory([
-        ...history,
-        {
-          round: round,
-          opponent: opponent,
-          predictions: nextPredictions,
-        },
+      setHistory(prevHistory => [
+        ...prevHistory,
+        { round: round, opponent: opponent, predictions: nextPredictions }
       ]);
     } catch (err: any) {
       console.error('Error:', err);
@@ -114,7 +99,7 @@ export default function Home() {
     setLastOpponent('Player 3');
     setPredictions([]);
     setHistory([]);
-    setError('');
+    setError(null);
   };
 
   return (
@@ -123,7 +108,7 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            🎲 Magic Chess Opponent Predictor
+            🎯 Magic Chess Opponent Predictor
           </h1>
           <p className="text-lg text-blue-200">
             Predict your next opponent using advanced machine learning
@@ -132,80 +117,64 @@ export default function Home() {
 
         {/* Main Container */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
           {/* Left Panel - Controls */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-xl p-6 sticky top-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Game Setup</h2>
-
+              
               {/* Player Selection */}
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Which Player Are You?
-                </label>
-                <select
-                  style={{ colorScheme: "light" }}
+                <label className="block text-gray-700 font-semibold mb-2">Which Player Are You?</label>
+                <select 
+                  style={{ colorScheme: 'light' }}
                   value={selectedPlayer}
                   onChange={(e) => {
                     setSelectedPlayer(e.target.value);
                     resetGame();
                   }}
-                  className="w-full rounded-xl border-2 border-purple-500 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-300"                >
-                  {PLAYERS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
+                  className="w-full rounded-xl border-2 border-purple-500 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                >
+                  {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
 
               {/* Round Selection */}
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Current Round
-                </label>
-                <select
-                  style={{ colorScheme: "light" }}
+                <label className="block text-gray-700 font-semibold mb-2">Current Round</label>
+                <select 
+                  style={{ colorScheme: 'light' }}
                   value={currentRound}
                   onChange={(e) => setCurrentRound(e.target.value)}
                   className="w-full rounded-xl border-2 border-purple-500 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-300"
                 >
-                  {ROUNDS.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
+                  {ROUNDS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
 
               {/* Last Opponent Selection */}
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Last Opponent
-                </label>
-                <select
-                  style={{ colorScheme: "light" }}
+                <label className="block text-gray-700 font-semibold mb-2">Last Opponent</label>
+                <select 
+                  style={{ colorScheme: 'light' }}
                   value={lastOpponent}
                   onChange={(e) => setLastOpponent(e.target.value)}
                   className="w-full rounded-xl border-2 border-purple-500 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-300"
                 >
-                  {PLAYERS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
+                  {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
 
               {/* Predict Button */}
-              <button
+              <button 
                 onClick={handlePredict}
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                {loading ? 'Predicting...' : '🔮 Predict'}
+                {loading ? '🔮 Predicting...' : '🪄 Predict'}
               </button>
-
-              <button
+              
+              <button 
                 onClick={resetGame}
                 className="w-full bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition"
               >
@@ -214,21 +183,16 @@ export default function Home() {
 
               {/* Status Info */}
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Player:</span> {selectedPlayer}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Round:</span> {currentRound}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Last Opponent:</span> {lastOpponent}
-                </p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Player:</span> {selectedPlayer}</p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Round:</span> {currentRound}</p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Last Opponent:</span> {lastOpponent}</p>
               </div>
             </div>
           </div>
 
           {/* Right Panel - Predictions */}
           <div className="lg:col-span-2">
+            
             {error && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
                 <p className="font-bold">Error</p>
@@ -239,87 +203,64 @@ export default function Home() {
             {/* Predictions Display */}
             {predictions.length > 0 && (
               <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  📊 Next Opponent Predictions
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">📊 Next Opponent Predictions</h2>
                 <div className="space-y-4">
                   {predictions.map((pred, idx) => {
-  const isOther = pred.opponent === 'Other Players';
-  
-  return (
-    <button
-      key={idx}
-      onClick={() => !isOther && handleSelectPrediction(pred.opponent)}
-      disabled={isOther}
-      className={`w-full text-left p-4 border-2 rounded-lg transition transform ${
-        isOther 
-          ? 'bg-gray-100 border-gray-300 opacity-70 cursor-not-allowed' 
-          : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-500 hover:shadow-lg hover:scale-102 cursor-pointer'
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className={`text-xl font-bold ${isOther ? 'text-gray-500' : 'text-gray-800'}`}>
-            {pred.opponent}
-          </p>
-          <p className="text-sm text-gray-600">
-            {isOther ? 'Unpredictable edge cases' : 'Click to continue prediction'}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className={`text-3xl font-bold ${isOther ? 'text-gray-500' : 'text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text'}`}>
-            {pred.probability}%
-          </p>
-        </div>
-      </div>
-    </button>
-  );
-})}
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xl font-bold text-gray-800">
-                            {pred.opponent}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Click to continue prediction
-                          </p>
+                    const isOther = pred.opponent === 'Other Players';
+                    
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => !isOther && handleSelectPrediction(pred.opponent)}
+                        disabled={isOther}
+                        className={`w-full text-left p-4 border-2 rounded-lg transition transform ${
+                          isOther 
+                            ? 'bg-gray-100 border-gray-300 opacity-70 cursor-not-allowed' 
+                            : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-500 hover:shadow-lg hover:scale-102 cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={`text-xl font-bold ${isOther ? 'text-gray-500' : 'text-gray-800'}`}>
+                              {pred.opponent}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {isOther ? 'Unpredictable edge cases' : 'Click to continue prediction'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-3xl font-bold ${isOther ? 'text-gray-500' : 'text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text'}`}>
+                              {pred.probability}%
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
-                            {pred.probability}%
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-xs text-gray-500 mt-4">
-                  💡 Tip: Click on any opponent to continue the prediction chain
-                </p>
+                <p className="text-xs text-gray-500 mt-4">💡 Tip: Click on any opponent to continue the prediction chain</p>
               </div>
             )}
 
             {/* Prediction History */}
             {history.length > 0 && (
               <div className="bg-white rounded-lg shadow-xl p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  📜 Prediction History
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">📜 Prediction History</h2>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {history.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500"
-                    >
+                    <div key={idx} className="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
                       <p className="font-semibold text-gray-800 mb-2">
                         Round {item.round}: {item.opponent}
                       </p>
                       <div className="flex gap-2 flex-wrap">
-                        {item.predictions.slice(0, 3).map((pred, pidx) => (
-                          <span
-                            key={pidx}
-                            className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold"
+                        {item.predictions.map((pred, pidx) => (
+                          <span 
+                            key={pidx} 
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                                pred.opponent === 'Other Players' 
+                                  ? 'bg-gray-200 text-gray-600' 
+                                  : 'bg-blue-100 text-blue-800'
+                            }`}
                           >
                             {pred.opponent} ({pred.probability}%)
                           </span>
@@ -334,24 +275,20 @@ export default function Home() {
             {/* Empty State */}
             {predictions.length === 0 && history.length === 0 && (
               <div className="bg-white rounded-lg shadow-xl p-12 text-center">
-                <p className="text-4xl mb-4">🎮</p>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Ready to Predict?
-                </h3>
+                <p className="text-4xl mb-4">🔮</p>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Ready to Predict?</h3>
                 <p className="text-gray-600 text-lg">
-                  Select your player and last opponent, then click "Predict" to see
-                  the 3 most likely next opponents!
+                  Select your player and last opponent, then click "Predict" to see the most likely next opponents!
                 </p>
               </div>
             )}
+
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-12 text-blue-200">
-          <p className="text-sm">
-            Powered by Machine Learning | Magic Chess Go Go Opponent Predictor v1.0
-          </p>
+          <p className="text-sm">Powered by Machine Learning | Magic Chess Go Go Opponent Predictor v1.0</p>
         </div>
       </div>
     </div>
