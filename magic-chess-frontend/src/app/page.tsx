@@ -31,10 +31,20 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<PredictionResult[]>([]);
+  
+  // New state to control the attention highlight on the dropdown
+  const [needsAttention, setNeedsAttention] = useState<boolean>(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const handlePredict = async () => {
+    // Prevent predicting if they haven't selected a new opponent yet
+    if (!lastOpponent) {
+      setError("Please select the Last Opponent before predicting.");
+      setNeedsAttention(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -100,6 +110,7 @@ export default function Home() {
     setPredictions([]);
     setHistory([]);
     setError(null);
+    setNeedsAttention(false); // Reset the highlight state
   };
 
   return (
@@ -154,13 +165,25 @@ export default function Home() {
 
               {/* Last Opponent Selection */}
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">Last Opponent</label>
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Last Opponent 
+                  {needsAttention && <span className="text-red-500 text-sm ml-2 animate-pulse">(Select One!)</span>}
+                </label>
                 <select 
                   style={{ colorScheme: 'light' }}
                   value={lastOpponent}
-                  onChange={(e) => setLastOpponent(e.target.value)}
-                  className="w-full rounded-xl border-2 border-purple-500 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  onChange={(e) => {
+                    setLastOpponent(e.target.value);
+                    setNeedsAttention(false); // Turn off highlight when selected
+                    setError(null); // Clear error message
+                  }}
+                  className={`w-full rounded-xl border-2 px-4 py-2 text-slate-900 focus:outline-none transition-all duration-300 ${
+                    needsAttention 
+                      ? 'border-red-500 bg-red-50 ring-4 ring-red-200 animate-pulse' 
+                      : 'border-purple-500 bg-white focus:ring-2 focus:ring-purple-300'
+                  }`}
                 >
+                  <option value="" disabled>Select the real opponent...</option>
                   {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
@@ -185,7 +208,7 @@ export default function Home() {
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                 <p className="text-sm text-gray-700"><span className="font-semibold">Player:</span> {selectedPlayer}</p>
                 <p className="text-sm text-gray-700"><span className="font-semibold">Round:</span> {currentRound}</p>
-                <p className="text-sm text-gray-700"><span className="font-semibold">Last Opponent:</span> {lastOpponent}</p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Last Opponent:</span> {lastOpponent || 'Waiting for selection...'}</p>
               </div>
             </div>
           </div>
@@ -194,13 +217,15 @@ export default function Home() {
           <div className="lg:col-span-2">
             
             {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
-                <p className="font-bold">Error</p>
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 shadow-md animate-bounce">
+                <p className="font-bold flex items-center">
+                  <span className="mr-2">⚠️</span> Attention Needed
+                </p>
                 <p>{error}</p>
               </div>
             )}
 
-           {/* Predictions Display */}
+            {/* Predictions Display */}
             {predictions.length > 0 && (
               <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">📊 Next Opponent Predictions</h2>
@@ -213,19 +238,25 @@ export default function Home() {
                         key={idx}
                         onClick={() => {
                           if (!isOther) {
-                            // Normal behavior: auto-predict the next round
+                            // Normal behavior
                             handleSelectPrediction(pred.opponent);
                           } else {
-                            // "Other" behavior: Just advance the round, don't auto-predict
+                            // "Other" behavior: Advance round, clear opponent, trigger highlight
                             const currentRoundIdx = ROUNDS.indexOf(currentRound);
                             if (currentRoundIdx < ROUNDS.length - 1) {
                               setCurrentRound(ROUNDS[currentRoundIdx + 1]);
-                              // Optional: You can set this to empty or leave it as is to force them to change the dropdown
-                              // setLastOpponent(''); 
+                              setLastOpponent(''); // Set empty string so the "Select real opponent" option shows
+                              setNeedsAttention(true); // Trigger red highlight
+                              setError("None of our predictions matched! Please manually select your real opponent from the highlighted dropdown on the left.");
+                              window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll up to show the error and dropdown
                             }
                           }
                         }}
-                        className="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg hover:border-blue-500 hover:shadow-lg transition transform hover:scale-102 cursor-pointer"
+                        className={`w-full text-left p-4 border-2 rounded-lg transition transform ${
+                          isOther 
+                            ? 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300 hover:border-gray-500 hover:shadow-lg hover:scale-102 cursor-pointer' 
+                            : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-500 hover:shadow-lg hover:scale-102 cursor-pointer'
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -237,7 +268,7 @@ export default function Home() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                            <p className={`text-3xl font-bold ${isOther ? 'text-gray-600' : 'text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text'}`}>
                               {pred.probability}%
                             </p>
                           </div>
@@ -249,7 +280,6 @@ export default function Home() {
                 <p className="text-xs text-gray-500 mt-4">💡 Tip: Click on any opponent to continue the prediction chain</p>
               </div>
             )}
-
 
             {/* Prediction History */}
             {history.length > 0 && (
