@@ -91,19 +91,19 @@ def build_position_model(matches):
 # ==================== PREDICTION ENGINE ====================
 
 def predict_next_opponent(player, current_round_idx, last_opponent, 
-                         transition_model, position_model, all_players):
+                          transition_model, position_model, all_players):
     """
-    Predict next 3 most likely opponents
+    Predict next most likely opponents including an 'Other Players' fallback
     Uses two strategies: transition-based and position-based
     """
     scores = Counter()
-    
+
     # Strategy 1: Transition-based (what comes after this opponent for this player)
     transition_key = (player, last_opponent)
     if transition_key in transition_model:
         for opponent, count in transition_model[transition_key].items():
             scores[opponent] += count * 2  # Higher weight for transitions
-    
+
     # Strategy 2: Position-based (what appears at this round position)
     next_round_idx = current_round_idx + 1
     position_key = (player, next_round_idx)
@@ -111,27 +111,43 @@ def predict_next_opponent(player, current_round_idx, last_opponent,
         for opponent, count in position_model[position_key].items():
             if opponent != player:  # Can't play yourself
                 scores[opponent] += count
-    
+
     # Fallback: Use general frequency if no specific pattern
     if not scores:
         for p in all_players:
             if p != player:
                 scores[p] = 1
-    
+
     # Get top 3
     top_3 = scores.most_common(3)
+
+    # Calculate percentages based on ALL scores, not just top 3
+    total_scores = sum(scores.values())
     
-    # Calculate percentages
-    total = sum([count for _, count in top_3])
-    predictions = [
-        {
+    predictions = []
+    top_3_prob_sum = 0.0
+
+    # Calculate true probabilities for the top 3
+    for opponent, count in top_3:
+        prob = round((count / total_scores) * 100, 1)
+        predictions.append({
             'opponent': opponent,
-            'probability': round((count / total) * 100, 1)
-        }
-        for opponent, count in top_3
-    ]
+            'probability': prob
+        })
+        top_3_prob_sum += prob
+
+    # Calculate remaining probability for anyone not in the top 3
+    other_prob = round(100.0 - top_3_prob_sum, 1)
     
+    # If there are other possibilities, add the fallback option
+    if other_prob > 0.0:
+        predictions.append({
+            'opponent': 'Other Players',
+            'probability': other_prob
+        })
+
     return predictions
+
 
 def extract_round_number(round_str):
     """Extract numeric position from round string like 'I-2', 'II-4', etc."""
