@@ -29,16 +29,15 @@ ALL_PLAYERS = [f"Player {i}" for i in range(1, NUM_PLAYERS + 1)]
 ROMAN_MAP = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7}
 
 # Rounds per stage: each stage has a different number of rounds
-ROUNDS_PER_STAGE = {"I": 4, "II": 6, "III": 6, "IV": 6, "V": 4}
+ROUNDS_PER_STAGE = {"I": 4, "II": 6, "III": 6, "IV": 6, "V": 6}
 
-# Players eliminated per round (index 0 = round I-1, etc.) — accumulated
-# These are typical values; adjust if your matches differ
+# Canonical round list — Stage V goes up to V-6 (seen in Match-12)
 ROUND_LIST = [
     "I-1", "I-2", "I-3", "I-4",
     "II-1", "II-2", "II-3", "II-4", "II-5", "II-6",
     "III-1", "III-2", "III-3", "III-4", "III-5", "III-6",
     "IV-1", "IV-2", "IV-3", "IV-4", "IV-5", "IV-6",
-    "V-1", "V-2", "V-3", "V-4",
+    "V-1", "V-2", "V-3", "V-4", "V-5", "V-6",
 ]
 
 # ── Logging Setup ──────────────────────────────────────────────────────────
@@ -66,6 +65,7 @@ def round_to_absolute_index(round_str: str) -> int:
         'I-4'   → 3
         'II-1'  → 4
         'V-4'   → 25
+        'V-6'   → 27
     """
     if round_str in ROUND_LIST:
         return ROUND_LIST.index(round_str)

@@ -10,7 +10,7 @@ const ROUNDS = [
   "II-1", "II-2", "II-3", "II-4", "II-5", "II-6",
   "III-1", "III-2", "III-3", "III-4", "III-5", "III-6",
   "IV-1", "IV-2", "IV-3", "IV-4", "IV-5", "IV-6",
-  "V-1", "V-2", "V-3", "V-4",
+  "V-1", "V-2", "V-3", "V-4", "V-5", "V-6",
 ];
 
 const STAGE_LABELS: Record<string, string> = {
@@ -475,6 +475,11 @@ export default function Home() {
                   Player Status
                 </p>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                  {/* Selected player — always alive, shown as "YOU" */}
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-indigo-50 text-indigo-700 font-semibold">
+                    <span className="w-3 h-3 flex items-center justify-center text-[10px]">👤</span>
+                    {selectedPlayer} (YOU)
+                  </span>
                   {PLAYERS.filter((p) => p !== selectedPlayer).map((p) => {
                     const isDead = eliminatedPlayers.has(p);
                     return (
