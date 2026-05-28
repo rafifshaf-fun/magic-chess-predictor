@@ -284,8 +284,8 @@ export default function Home() {
   }, [currentRound, lastOpponent]);
 
   // ── Reset ──
-  const resetGame = useCallback(() => {
-    setSelectedPlayer("Player 1");
+  const resetGame = useCallback((player = "Player 1") => {
+    setSelectedPlayer(player);
     setCurrentRound("I-2");
     setLastOpponent("Player 3");
     setPreviousOpponent(null);
@@ -353,8 +353,7 @@ export default function Home() {
                   aria-label="Select your player"
                   value={selectedPlayer}
                   onChange={(e) => {
-                    setSelectedPlayer(e.target.value);
-                    resetGame();
+                    resetGame(e.target.value);
                   }}
                   className="w-full rounded-xl border-2 border-indigo-300 bg-white px-4 py-2.5 text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
                 >
