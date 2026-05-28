@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -142,9 +142,23 @@ export default function Home() {
   const [needsAttention, setNeedsAttention] = useState<boolean>(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [historyExpanded, setHistoryExpanded] = useState<boolean>(true);
+  const [eliminatedPlayers, setEliminatedPlayers] = useState<Set<string>>(new Set());
 
   const historyEndRef = useRef<HTMLDivElement>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const alivePlayers = useMemo(
+    () => PLAYERS.filter((p) => p !== selectedPlayer && !eliminatedPlayers.has(p)),
+    [selectedPlayer, eliminatedPlayers],
+  );
+
+  const toggleEliminated = useCallback((player: string) => {
+    setEliminatedPlayers((prev) => {
+      const next = new Set(prev);
+      if (next.has(player)) next.delete(player); else next.add(player);
+      return next;
+    });
+  }, []);
 
   // Fetch model stats on mount
   useEffect(() => {
@@ -166,12 +180,14 @@ export default function Home() {
       round: string,
       opponent: string,
       prevOpp: string | null,
+      elimSet: Set<string>,
     ): Promise<Prediction[] | null> => {
       try {
-        const payload: Record<string, string> = {
+        const payload: Record<string, unknown> = {
           player,
           current_round: round,
           last_opponent: opponent,
+          eliminated: [...elimSet],
         };
         if (prevOpp) {
           payload.previous_opponent = prevOpp;
@@ -207,6 +223,7 @@ export default function Home() {
       currentRound,
       lastOpponent,
       previousOpponent,
+      eliminatedPlayers,
     );
 
     if (result) {
@@ -222,6 +239,7 @@ export default function Home() {
     currentRound,
     lastOpponent,
     previousOpponent,
+    eliminatedPlayers,
     fetchPrediction,
   ]);
 
@@ -238,7 +256,7 @@ export default function Home() {
       setLoading(true);
       setError(null);
 
-      const result = await fetchPrediction(selectedPlayer, nxt, opponent, lastOpponent || null);
+      const result = await fetchPrediction(selectedPlayer, nxt, opponent, lastOpponent || null, eliminatedPlayers);
       if (result) {
         setPredictions(result);
         setHistory((prev) => [
@@ -248,7 +266,7 @@ export default function Home() {
       }
       setLoading(false);
     },
-    [currentRound, lastOpponent, selectedPlayer, fetchPrediction],
+    [currentRound, lastOpponent, selectedPlayer, eliminatedPlayers, fetchPrediction],
   );
 
   // ── Handle "Other Players" fallback ──
@@ -261,9 +279,8 @@ export default function Home() {
     setPredictions([]);
     setNeedsAttention(true);
     setError(
-      "None of our predictions matched! Please manually select your real opponent from the highlighted dropdown on the left.",
+      "None of our predictions matched! Please manually select your real opponent from the highlighted dropdown.",
     );
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentRound, lastOpponent]);
 
   // ── Reset ──
@@ -276,6 +293,7 @@ export default function Home() {
     setHistory([]);
     setError(null);
     setNeedsAttention(false);
+    setEliminatedPlayers(new Set());
   }, []);
 
   // ── Keyboard support ──
@@ -300,7 +318,7 @@ export default function Home() {
         {/* ── Header ── */}
         <header className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-2 tracking-tight">
-            <span className="inline-block animate-bounce-slow">🎯</span>{" "}
+            <span className="inline-block">🎯</span>{" "}
             Magic Chess Opponent Predictor
           </h1>
           <p className="text-lg text-purple-200">
@@ -448,6 +466,39 @@ export default function Home() {
                   {lastOpponent || (
                     <span className="text-red-400 italic">Waiting for selection…</span>
                   )}
+                </p>
+              </div>
+
+              {/* ── Player Roster (alive/dead) ── */}
+              <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Player Status
+                </p>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                  {PLAYERS.filter((p) => p !== selectedPlayer).map((p) => {
+                    const isDead = eliminatedPlayers.has(p);
+                    return (
+                      <label
+                        key={p}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer transition ${
+                          isDead
+                            ? "bg-red-50 text-red-400 line-through"
+                            : "bg-white text-gray-700 hover:bg-green-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isDead}
+                          onChange={() => toggleEliminated(p)}
+                          className="w-3 h-3 accent-red-500 cursor-pointer"
+                        />
+                        {p}
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1.5">
+                  {alivePlayers.length + 1} alive · {eliminatedPlayers.size} eliminated
                 </p>
               </div>
 

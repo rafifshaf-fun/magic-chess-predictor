@@ -310,6 +310,7 @@ def predict_next_opponent(
     current_round_idx: int,
     last_opponent: str,
     previous_opponent: Optional[str] = None,
+    eliminated: Optional[set] = None,
 ) -> List[dict]:
     """Predict the next opponent with confidence scores.
 
@@ -323,10 +324,14 @@ def predict_next_opponent(
           baseline score so they aren't excluded just because of sparse data)
       5. General frequency fallback             — weight 1 (empty state)
 
+    Args:
+        eliminated: set of player names known to be dead (excluded entirely).
+
     Returns a list of up to 3 named opponents plus an "Other Players" entry
     that *also* lists the remaining alive candidates so the user knows who
     else is in the pool.
     """
+    eliminated = eliminated or set()
     scores: Counter = Counter()
     alive_estimate: Optional[set] = round_alive_estimates.get(current_round_idx + 1)
 
@@ -335,20 +340,22 @@ def predict_next_opponent(
         bigram_key = (player, previous_opponent, last_opponent)
         if bigram_key in bigram_model:
             for opp, count in bigram_model[bigram_key].items():
-                scores[opp] += count * 5
+                if opp not in eliminated:
+                    scores[opp] += count * 5
 
     # ── Strategy 2: Single-step transition ──
     trans_key = (player, last_opponent)
     if trans_key in transition_model:
         for opp, count in transition_model[trans_key].items():
-            scores[opp] += count * 4
+            if opp not in eliminated:
+                scores[opp] += count * 4
 
     # ── Strategy 3: Positional ──
     next_idx = current_round_idx + 1
     pos_key = (player, next_idx)
     if pos_key in position_model:
         for opp, count in position_model[pos_key].items():
-            if opp != player:
+            if opp != player and opp not in eliminated:
                 scores[opp] += count * 3
 
     # ── Strategy 4: Alive-but-unseen boost ──
@@ -357,13 +364,13 @@ def predict_next_opponent(
     # in this context get a small baseline score so they stay in the pool.
     if alive_estimate:
         for p in alive_estimate:
-            if p != player and p not in scores:
+            if p != player and p not in eliminated and p not in scores:
                 scores[p] += 1  # Small weight — "don't forget me"
 
     # ── Strategy 5: General frequency fallback ──
     if not scores:
         for p in ALL_PLAYERS:
-            if p != player:
+            if p != player and p not in eliminated:
                 scores[p] = 1
 
     # ── Build response ──
@@ -488,6 +495,7 @@ def predict():
         current_round = (data.get("current_round") or "I-1").strip()
         last_opponent = (data.get("last_opponent") or "").strip()
         previous_opponent = (data.get("previous_opponent") or "").strip() or None
+        eliminated = set(data.get("eliminated") or [])
 
         # ── Validation ──
         errors = []
@@ -510,6 +518,7 @@ def predict():
         preds = predict_next_opponent(
             player, round_idx, last_opponent,
             previous_opponent=previous_opponent,
+            eliminated=eliminated,
         )
 
         next_round = get_next_round(current_round)
@@ -521,6 +530,8 @@ def predict():
             "next_round": next_round,
             "last_opponent": last_opponent,
             "previous_opponent": previous_opponent,
+            "eliminated": sorted(eliminated),
+            "alive_count": len(ALL_PLAYERS) - len(eliminated),
             "next_predictions": preds,
             "timestamp": datetime.now().isoformat(),
         })
