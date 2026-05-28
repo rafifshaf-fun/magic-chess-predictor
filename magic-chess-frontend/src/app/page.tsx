@@ -445,7 +445,7 @@ export default function Home() {
               </button>
 
               <button
-                onClick={resetGame}
+                onClick={() => resetGame()}
                 className="w-full bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-300 transition"
               >
                 🔄 Reset Game
