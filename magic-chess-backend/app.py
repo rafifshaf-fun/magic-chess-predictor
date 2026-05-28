@@ -128,13 +128,14 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def discover_match_files(base_dir: str = ".") -> List[str]:
-    """Find all match CSV files sorted naturally."""
+    """Find all match CSV files sorted naturally, excluding templates."""
     from pathlib import Path
-    files = sorted(
-        Path(base_dir).glob(MATCH_FILE_PATTERN),
-        key=lambda p: [int(c) if c.isdigit() else c for c in re.split(r"(\d+)", p.name)],
-    )
-    return [str(f) for f in files]
+    files = [
+        str(f) for f in Path(base_dir).glob(MATCH_FILE_PATTERN)
+        if "template" not in f.name.lower()
+    ]
+    files.sort(key=lambda p: [int(c) if c.isdigit() else c for c in re.split(r"(\d+)", p)])
+    return files
 
 
 def load_training_data(base_dir: str = ".") -> List[pd.DataFrame]:
